@@ -1,9 +1,19 @@
+
+/**
+ * NotFound Page
+ * 
+ * This component is displayed when a user navigates to a route that doesn't exist.
+ * It provides a simple 404 error message and a link back to the home page.
+ * It also logs the attempted route to the console for debugging purposes.
+ */
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 
 const NotFound = () => {
+  // Get current location information
   const location = useLocation();
 
+  // Log the 404 error to the console for debugging
   useEffect(() => {
     console.error(
       "404 Error: User attempted to access non-existent route:",

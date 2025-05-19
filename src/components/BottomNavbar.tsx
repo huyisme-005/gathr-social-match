@@ -1,11 +1,22 @@
 
+/**
+ * BottomNavbar Component
+ * 
+ * This component creates the mobile-friendly navigation bar at the bottom of the app.
+ * It contains links to the main sections of the application with icons and labels.
+ * The current route is highlighted with the app's primary coral color.
+ */
 import { useNavigate, useLocation } from "react-router-dom";
 import { Search, CalendarPlus, CalendarCheck, UserRound } from "lucide-react";
 
 const BottomNavbar = () => {
+  // Hook for programmatic navigation
   const navigate = useNavigate();
+  
+  // Hook for getting current location/route information
   const location = useLocation();
   
+  // Navigation items with their labels, routes and icons
   const navItems = [
     {
       name: "Find Events",
@@ -38,8 +49,8 @@ const BottomNavbar = () => {
             onClick={() => navigate(item.path)}
             className={`flex flex-col items-center justify-center py-3 px-2 w-1/4 ${
               location.pathname === item.path 
-                ? "text-gathr-coral" 
-                : "text-gray-500 hover:text-gathr-coral"
+                ? "text-gathr-coral" // Active route gets coral color
+                : "text-gray-500 hover:text-gathr-coral" // Inactive routes are gray
             }`}
           >
             {item.icon}

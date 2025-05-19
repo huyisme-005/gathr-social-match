@@ -1,4 +1,11 @@
 
+/**
+ * Profile Page
+ * 
+ * This component displays the user's profile information, including personal details,
+ * personality traits, and account statistics. It allows editing the profile and 
+ * provides an option to retake the personality test.
+ */
 import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -11,11 +18,20 @@ import { toast } from "@/components/ui/use-toast";
 import { Pencil, Save, X } from "lucide-react";
 
 const Profile = () => {
+  // Get user data from auth context
   const { user } = useAuth();
+  
+  // State for edit mode
   const [isEditing, setIsEditing] = useState(false);
+  
+  // State for form fields
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
   
+  /**
+   * Save profile changes
+   * In a real app, this would call an API to update the user's profile
+   */
   const handleSaveProfile = () => {
     // In a real app, this would call an API to update the user's profile
     setIsEditing(false);
@@ -26,6 +42,9 @@ const Profile = () => {
     });
   };
   
+  /**
+   * Get user initials for avatar fallback
+   */
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -34,6 +53,10 @@ const Profile = () => {
       .toUpperCase();
   };
   
+  /**
+   * Format personality trait name for display
+   * Converts "trait-name" to "Trait Name"
+   */
   const formatTraitName = (trait: string) => {
     return trait.charAt(0).toUpperCase() + trait.slice(1).replace('-', ' ');
   };
@@ -44,6 +67,7 @@ const Profile = () => {
       
       <Card>
         <CardHeader className="flex flex-row items-center gap-4">
+          {/* User avatar */}
           <Avatar className="h-20 w-20">
             <AvatarImage alt={user?.name} />
             <AvatarFallback className="text-lg bg-gathr-coral text-white">
@@ -52,6 +76,7 @@ const Profile = () => {
           </Avatar>
           
           <div className="flex-1">
+            {/* User name - editable in edit mode */}
             {isEditing ? (
               <Input
                 value={name}
@@ -62,6 +87,7 @@ const Profile = () => {
               <h2 className="text-xl font-semibold">{user?.name}</h2>
             )}
             
+            {/* User email - editable in edit mode */}
             {isEditing ? (
               <Input
                 value={email}
@@ -74,6 +100,7 @@ const Profile = () => {
             )}
           </div>
           
+          {/* Edit/Save buttons */}
           {isEditing ? (
             <div className="flex gap-2">
               <Button 
@@ -106,6 +133,7 @@ const Profile = () => {
         </CardHeader>
         
         <CardContent className="space-y-4">
+          {/* Personality traits section */}
           <div>
             <h3 className="font-medium mb-2">Personality Traits</h3>
             <div className="flex flex-wrap gap-2">
@@ -121,6 +149,7 @@ const Profile = () => {
             </div>
           </div>
           
+          {/* Account stats section */}
           <div>
             <h3 className="font-medium mb-2">Account Stats</h3>
             <div className="grid grid-cols-2 gap-4">
@@ -137,6 +166,7 @@ const Profile = () => {
         </CardContent>
         
         <CardFooter className="flex-col gap-2">
+          {/* Button to retake the personality test */}
           <Button 
             variant="outline" 
             className="w-full"

@@ -1,13 +1,25 @@
 
+/**
+ * Header Component
+ * 
+ * This component displays the main application header with the Gathr logo and logout button.
+ * It's used in the main layout for authenticated users.
+ */
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import GathrLogo from "./GathrLogo";
 
 const Header = () => {
+  // Get authentication functions from AuthContext
   const { logout } = useAuth();
+  
+  // Hook for programmatic navigation
   const navigate = useNavigate();
   
+  /**
+   * Handles user logout by calling the logout function and redirecting to login page
+   */
   const handleLogout = () => {
     logout();
     navigate("/login");

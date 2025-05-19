@@ -1,4 +1,11 @@
 
+/**
+ * EventFilterDialog Component
+ * 
+ * This component provides a dialog for filtering events by categories, date, and distance.
+ * It receives current filters from the parent component and applies new filters when the user
+ * submits the form.
+ */
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -9,14 +16,14 @@ import { Calendar } from "@/components/ui/calendar";
 import { eventCategories } from "../data/eventCategories";
 
 interface EventFilterDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  filters: {
-    categories: string[];
-    date: Date | null;
-    distance: number;
+  open: boolean;                                // Controls dialog visibility
+  onOpenChange: (open: boolean) => void;        // Callback to change dialog visibility
+  filters: {                                    // Current active filters
+    categories: string[];                       // Selected event categories
+    date: Date | null;                          // Selected date filter
+    distance: number;                           // Selected distance radius in km
   };
-  onApplyFilters: (filters: { categories: string[]; date: Date | null; distance: number }) => void;
+  onApplyFilters: (filters: { categories: string[]; date: Date | null; distance: number }) => void; // Callback when filters are applied
 }
 
 const EventFilterDialog = ({ 
@@ -25,10 +32,14 @@ const EventFilterDialog = ({
   filters, 
   onApplyFilters 
 }: EventFilterDialogProps) => {
+  // Local state for filter values in the dialog
   const [categories, setCategories] = useState<string[]>([]);
   const [date, setDate] = useState<Date | null>(null);
   const [distance, setDistance] = useState(10);
   
+  /**
+   * Initialize filter state with current filters when dialog opens
+   */
   useEffect(() => {
     // Initialize state with current filters
     setCategories(filters.categories);
@@ -36,6 +47,9 @@ const EventFilterDialog = ({
     setDistance(filters.distance);
   }, [filters, open]);
   
+  /**
+   * Toggle a category in the selection
+   */
   const toggleCategory = (category: string) => {
     if (categories.includes(category)) {
       setCategories(categories.filter((c) => c !== category));
@@ -44,11 +58,17 @@ const EventFilterDialog = ({
     }
   };
   
+  /**
+   * Apply selected filters and close the dialog
+   */
   const handleApply = () => {
     onApplyFilters({ categories, date, distance });
     onOpenChange(false);
   };
   
+  /**
+   * Clear all filters
+   */
   const handleClear = () => {
     setCategories([]);
     setDate(null);
@@ -63,6 +83,7 @@ const EventFilterDialog = ({
         </DialogHeader>
         
         <div className="space-y-6 py-4">
+          {/* Category filter */}
           <div className="space-y-2">
             <Label>Categories</Label>
             <div className="flex flex-wrap gap-2">
@@ -81,6 +102,7 @@ const EventFilterDialog = ({
             </div>
           </div>
           
+          {/* Date filter */}
           <div className="space-y-2">
             <Label>Date</Label>
             <Calendar
@@ -92,6 +114,7 @@ const EventFilterDialog = ({
             />
           </div>
           
+          {/* Distance filter */}
           <div className="space-y-4">
             <div className="flex justify-between">
               <Label>Distance</Label>

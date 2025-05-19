@@ -1,4 +1,11 @@
 
+/**
+ * Index Page
+ * 
+ * This is the landing page of the application, shown to users who are not logged in.
+ * It contains the Gathr logo, a brief description of the app, and buttons to login or register.
+ * If the user is already authenticated, they are redirected to the appropriate page.
+ */
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -6,9 +13,17 @@ import { Button } from "@/components/ui/button";
 import GathrLogo from "../components/GathrLogo";
 
 const Index = () => {
+  // Hook for programmatic navigation
   const navigate = useNavigate();
+  
+  // Get authentication state from context
   const { isAuthenticated, hasCompletedPersonalityTest } = useAuth();
 
+  /**
+   * Redirect authenticated users to the appropriate page
+   * - New users who haven't completed the personality test: to the test page
+   * - Returning users who have completed the test: to the find events page
+   */
   useEffect(() => {
     if (isAuthenticated) {
       if (!hasCompletedPersonalityTest) {

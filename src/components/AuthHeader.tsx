@@ -1,4 +1,10 @@
 
+/**
+ * AuthHeader Component
+ * 
+ * This component displays the header used across authentication pages (login, register, personality test).
+ * It contains the Gathr logo centered in the header.
+ */
 import GathrLogo from "./GathrLogo";
 
 const AuthHeader = () => {

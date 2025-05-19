@@ -1,4 +1,12 @@
 
+/**
+ * App Component
+ * 
+ * This is the root component of the application. It sets up:
+ * - Global providers (QueryClient, Auth, Tooltips, Toasts)
+ * - Routing configuration
+ * - Layouts for different sections of the app
+ */
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,8 +32,12 @@ import Profile from "./pages/Profile";
 // Context
 import { AuthProvider } from "./contexts/AuthContext";
 
+// Create a client for React Query
 const queryClient = new QueryClient();
 
+/**
+ * App component - the main entry point of the application
+ */
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -35,16 +47,17 @@ const App = () => (
         <BrowserRouter>
           <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
             <Routes>
+              {/* Landing page route */}
               <Route path="/" element={<Index />} />
               
-              {/* Auth Routes */}
+              {/* Auth Routes - wrapped in AuthLayout */}
               <Route element={<AuthLayout />}>
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/personality-test" element={<PersonalityTest />} />
               </Route>
               
-              {/* Main App Routes */}
+              {/* Main App Routes - wrapped in MainLayout with bottom nav */}
               <Route element={<MainLayout />}>
                 <Route path="/find-events" element={<FindEvents />} />
                 <Route path="/create-event" element={<CreateEvent />} />
@@ -52,7 +65,7 @@ const App = () => (
                 <Route path="/profile" element={<Profile />} />
               </Route>
               
-              {/* Catch all */}
+              {/* Catch all - 404 page */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
