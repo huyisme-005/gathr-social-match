@@ -26,12 +26,17 @@ Gathr helps users find events that match their personality and interests, connec
 - React Router for navigation
 - React Query for data fetching
 
-### Backend (Planned)
-- Python backend API (to be implemented)
-- AI algorithm for personality matching
-- Recommendation engine
+### Backend
+- Python Flask REST API
+- SQLAlchemy ORM for database operations
+- PostgreSQL database
+- JWT authentication
+- Scikit-learn for AI personality matching
+- TensorFlow for recommendation engine
 
 ## How to Run the App
+
+### Frontend Setup
 
 1. Clone the repository
 ```bash
@@ -51,6 +56,37 @@ npm run dev
 
 4. Open your browser and navigate to `http://localhost:8080`
 
+### Backend Setup
+
+1. Navigate to the backend directory
+```bash
+cd backend
+```
+
+2. Create and activate a Python virtual environment
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+3. Install dependencies
+```bash
+pip install -r ../requirements.txt
+```
+
+4. Set up PostgreSQL database
+```bash
+# Create a PostgreSQL database named 'gathr_db'
+# You may need to update DATABASE_URL in database.py
+```
+
+5. Start the Flask server
+```bash
+python app.py
+```
+
+The backend API will be available at `http://localhost:5000`
+
 ## Component Structure
 
 - `src/`
@@ -60,6 +96,11 @@ npm run dev
   - `layouts/` - Page layout components
   - `pages/` - Main application pages
   - `types/` - TypeScript type definitions
+- `backend/`
+  - `app.py` - Main Flask application entry point
+  - `models.py` - SQLAlchemy database models
+  - `database.py` - Database configuration and initialization
+  - `ai.py` - AI algorithms for personality analysis and matching
 
 ## Key Components
 
@@ -67,6 +108,7 @@ npm run dev
 - `AuthContext.tsx` - Manages user authentication state
 - `Login.tsx` & `Register.tsx` - Authentication pages
 - `PersonalityTest.tsx` - User onboarding personality quiz
+- Backend JWT authentication with Flask-JWT-Extended
 
 ### Event Management
 - `FindEvents.tsx` - Main event discovery page
@@ -74,9 +116,16 @@ npm run dev
 - `UpcomingEvents.tsx` - User's booked and created events
 - `EventCard.tsx` - Reusable event card component
 - `EventFilterDialog.tsx` - Event filtering interface
+- RESTful API endpoints for event operations
 
 ### User Profile
 - `Profile.tsx` - User profile management
+- Personality trait storage and analysis
+
+### AI Components
+- Personality analysis algorithm
+- Event-user matching algorithm
+- Recommendation engine
 
 ## Layouts
 - `MainLayout.tsx` - Layout for authenticated pages with bottom navigation
@@ -89,15 +138,44 @@ The application is fully responsive and works well on both iPhone and desktop de
 - Bottom navigation for mobile
 - Adaptive layouts for different screen sizes
 
-## Current Limitations and Future Improvements
-- Authentication is currently simulated (no real backend)
-- Personality test results are stored locally
-- Events are using mock data
-- Backend integration with Python needs to be implemented
-- Social media integration for enhanced personality analysis
-- Real-time notifications for event updates
-- In-app messaging between event attendees
-- Event ratings and feedback system
+## Current Implementation Status
+
+✅ Frontend user interface  
+✅ Responsive design for mobile and desktop  
+✅ User authentication (frontend interface)  
+✅ Personality test with trait analysis  
+✅ Event discovery with infinite scrolling  
+✅ User profiles with personality traits  
+✅ Backend API structure with Flask  
+✅ Database models for users, events, and attendance  
+✅ API endpoints for core functionality  
+✅ Basic AI matching algorithm  
+
+## Limitations and Planned Improvements
+
+- **Current Backend**: The backend is implemented but needs to be integrated with the frontend
+- **Database Connection**: Frontend needs to be connected to the backend API instead of mock data
+- **AI Model Training**: The personality matching algorithm needs training with real user data
+- **Real-time Features**: Add WebSockets for real-time notifications and updates
+- **Social Media Integration**: Add OAuth for social media login and personality analysis
+- **In-app Messaging**: Implement chat functionality between event attendees
+- **Event Ratings**: Add a feedback system for events to improve recommendations
+- **Mobile App**: Develop native mobile applications for iOS and Android
+
+## API Endpoints
+
+### Authentication
+- POST `/api/register` - Register a new user
+- POST `/api/login` - User login
+
+### Personality
+- POST `/api/personality-test` - Submit personality test results
+
+### Events
+- GET `/api/events` - Get events with filtering and pagination
+- POST `/api/events` - Create a new event
+- POST `/api/events/<event_id>/book` - Book attendance for an event
+- GET `/api/events/upcoming` - Get user's upcoming events
 
 ## User Flow
 1. User signs up or logs in
@@ -107,12 +185,6 @@ The application is fully responsive and works well on both iPhone and desktop de
 5. Users can book events or create their own
 6. Users can manage their bookings and created events
 7. Users can view and edit their profile
-
-## Backend Requirements (To Be Implemented)
-- Python-based API for handling user data and events
-- AI/Machine learning for personality analysis
-- Algorithm for matching users with events and other attendees
-- Database for storing user profiles, events, and interactions
 
 ## Contributing
 Contributions are welcome! Please feel free to submit a Pull Request.

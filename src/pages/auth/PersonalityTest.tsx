@@ -62,24 +62,66 @@ const questions = [
   },
 ];
 
+/**
+ * PersonalityTest Component
+ * 
+ * This component implements the personality quiz that users take after registration.
+ * It presents a series of questions and records user responses to determine personality traits.
+ * After completion, the results are stored in the user's profile for event matching.
+ */
 const PersonalityTest = () => {
+  // Current question index
   const [currentQuestion, setCurrentQuestion] = useState(0);
+  // Object to store user's answers, keyed by question ID
   const [answers, setAnswers] = useState<Record<number, string>>({});
+  // Array to store selected personality traits
   const [selectedTraits, setSelectedTraits] = useState<string[]>([]);
+  // Access auth context for completing the personality test
   const { completePersonalityTest } = useAuth();
+  // React Router navigation
   const navigate = useNavigate();
   
+  /**
+   * Handle user selecting an answer option
+   * Stores the selected trait in answers state
+   * 
+   * @param questionId - The ID of the current question
+   * @param trait - The personality trait associated with the selected option
+   */
   const handleAnswer = (questionId: number, trait: string) => {
     setAnswers({
       ...answers,
       [questionId]: trait,
     });
     
-    if (currentQuestion < questions.length - 1) {
+    // Note: We've removed auto-advancing to next question here
+    // Now the user must click the Next button
+  };
+  
+  /**
+   * Handle next button click
+   * Advances to the next question if an answer is selected
+   */
+  const handleNext = () => {
+    if (currentQuestion < questions.length - 1 && answers[questions[currentQuestion].id]) {
       setCurrentQuestion(currentQuestion + 1);
     }
   };
   
+  /**
+   * Handle previous button click
+   * Returns to the previous question
+   */
+  const handlePrevious = () => {
+    if (currentQuestion > 0) {
+      setCurrentQuestion(currentQuestion - 1);
+    }
+  };
+  
+  /**
+   * Submit personality test results
+   * Calculates traits based on answers and navigates to events page
+   */
   const handleSubmit = () => {
     // Calculate personality traits based on answers
     const traits = Object.values(answers);
@@ -92,9 +134,14 @@ const PersonalityTest = () => {
     navigate("/find-events");
   };
   
+  // Get current question data
   const question = questions[currentQuestion];
+  // Calculate progress percentage
   const progress = ((currentQuestion + 1) / questions.length) * 100;
+  // Check if all questions have been answered
   const hasAnsweredAllQuestions = Object.keys(answers).length >= questions.length;
+  // Check if current question has been answered (for Next button)
+  const currentQuestionAnswered = answers[question.id] !== undefined;
   
   return (
     <Card className="w-full">
@@ -113,7 +160,10 @@ const PersonalityTest = () => {
             {question.question}
           </h3>
           
-          <RadioGroup className="space-y-3">
+          <RadioGroup 
+            className="space-y-3"
+            value={answers[question.id] ? answers[question.id] : undefined}
+          >
             {question.options.map((option) => (
               <div key={option.id} className="flex items-center space-x-2">
                 <RadioGroupItem
@@ -134,7 +184,7 @@ const PersonalityTest = () => {
         <Button
           variant="outline"
           disabled={currentQuestion === 0}
-          onClick={() => setCurrentQuestion(currentQuestion - 1)}
+          onClick={handlePrevious}
         >
           Previous
         </Button>
@@ -149,8 +199,8 @@ const PersonalityTest = () => {
         ) : (
           <Button 
             variant="ghost" 
-            disabled={currentQuestion === questions.length - 1 || !answers[question.id]}
-            onClick={() => setCurrentQuestion(currentQuestion + 1)}
+            disabled={currentQuestion === questions.length - 1 || !currentQuestionAnswered}
+            onClick={handleNext}
           >
             Next
           </Button>
