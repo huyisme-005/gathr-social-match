@@ -1,73 +1,118 @@
-# Welcome to your Lovable project
 
-## Project info
+# Gathr - Social Event Platform
 
-**URL**: https://lovable.dev/projects/20e58469-6fd6-49ac-8e40-fa319141b412
+Gathr is an AI-driven event platform that connects young professionals through curated events and personality-based matching.
 
-## How can I edit this code?
+## Overview
 
-There are several ways of editing your application.
+Gathr helps users find events that match their personality and interests, connect with compatible attendees, and create their own events. The platform uses a personality quiz to understand user preferences and suggest relevant events.
 
-**Use Lovable**
+## Features
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/20e58469-6fd6-49ac-8e40-fa319141b412) and start prompting.
+- User authentication (login/registration)
+- Personality test for personalized recommendations
+- Event discovery with infinite scrolling
+- Event filtering and search
+- Event creation and management
+- Booking system for events
+- User profile management
 
-Changes made via Lovable will be committed automatically to this repo.
+## Technologies Used
 
-**Use your preferred IDE**
+### Frontend
+- React with TypeScript
+- TailwindCSS for styling
+- Shadcn UI component library
+- React Router for navigation
+- React Query for data fetching
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Backend (Planned)
+- Python backend API (to be implemented)
+- AI algorithm for personality matching
+- Recommendation engine
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## How to Run the App
 
-Follow these steps:
+1. Clone the repository
+```bash
+git clone <repository-url>
+cd gathr-app
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+2. Install dependencies
+```bash
+npm install
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+3. Start the development server
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+4. Open your browser and navigate to `http://localhost:8080`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Component Structure
 
-**Use GitHub Codespaces**
+- `src/`
+  - `components/` - Reusable UI components
+  - `contexts/` - React contexts for state management
+  - `data/` - Mock data for development
+  - `layouts/` - Page layout components
+  - `pages/` - Main application pages
+  - `types/` - TypeScript type definitions
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Key Components
 
-## What technologies are used for this project?
+### Authentication
+- `AuthContext.tsx` - Manages user authentication state
+- `Login.tsx` & `Register.tsx` - Authentication pages
+- `PersonalityTest.tsx` - User onboarding personality quiz
 
-This project is built with:
+### Event Management
+- `FindEvents.tsx` - Main event discovery page
+- `CreateEvent.tsx` - Event creation form
+- `UpcomingEvents.tsx` - User's booked and created events
+- `EventCard.tsx` - Reusable event card component
+- `EventFilterDialog.tsx` - Event filtering interface
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### User Profile
+- `Profile.tsx` - User profile management
 
-## How can I deploy this project?
+## Layouts
+- `MainLayout.tsx` - Layout for authenticated pages with bottom navigation
+- `AuthLayout.tsx` - Layout for authentication pages
 
-Simply open [Lovable](https://lovable.dev/projects/20e58469-6fd6-49ac-8e40-fa319141b412) and click on Share -> Publish.
+## Mobile & Desktop Compatibility
+The application is fully responsive and works well on both iPhone and desktop devices. It utilizes:
+- Responsive design principles with Tailwind CSS
+- Mobile-first approach
+- Bottom navigation for mobile
+- Adaptive layouts for different screen sizes
 
-## Can I connect a custom domain to my Lovable project?
+## Current Limitations and Future Improvements
+- Authentication is currently simulated (no real backend)
+- Personality test results are stored locally
+- Events are using mock data
+- Backend integration with Python needs to be implemented
+- Social media integration for enhanced personality analysis
+- Real-time notifications for event updates
+- In-app messaging between event attendees
+- Event ratings and feedback system
 
-Yes, you can!
+## User Flow
+1. User signs up or logs in
+2. New users complete a personality test
+3. Users are directed to the event discovery page
+4. Users can browse, search, and filter events
+5. Users can book events or create their own
+6. Users can manage their bookings and created events
+7. Users can view and edit their profile
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Backend Requirements (To Be Implemented)
+- Python-based API for handling user data and events
+- AI/Machine learning for personality analysis
+- Algorithm for matching users with events and other attendees
+- Database for storing user profiles, events, and interactions
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## Contributing
+Contributions are welcome! Please feel free to submit a Pull Request.
