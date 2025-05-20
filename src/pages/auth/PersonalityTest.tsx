@@ -93,9 +93,6 @@ const PersonalityTest = () => {
       ...answers,
       [questionId]: trait,
     });
-    
-    // Note: We've removed auto-advancing to next question here
-    // Now the user must click the Next button
   };
   
   /**
@@ -162,14 +159,14 @@ const PersonalityTest = () => {
           
           <RadioGroup 
             className="space-y-3"
-            value={answers[question.id] ? answers[question.id] : undefined}
+            value={answers[question.id]}
+            onValueChange={(value) => handleAnswer(question.id, value)}
           >
             {question.options.map((option) => (
               <div key={option.id} className="flex items-center space-x-2">
                 <RadioGroupItem
-                  value={option.id}
+                  value={option.trait}
                   id={`q${question.id}-${option.id}`}
-                  onClick={() => handleAnswer(question.id, option.trait)}
                 />
                 <Label htmlFor={`q${question.id}-${option.id}`} className="flex-1 cursor-pointer py-2">
                   {option.text}
@@ -189,18 +186,19 @@ const PersonalityTest = () => {
           Previous
         </Button>
         
-        {hasAnsweredAllQuestions ? (
+        {currentQuestion === questions.length - 1 && currentQuestionAnswered ? (
           <Button 
             className="bg-gathr-coral hover:bg-gathr-coral/90" 
             onClick={handleSubmit}
+            disabled={!currentQuestionAnswered}
           >
             Complete
           </Button>
         ) : (
           <Button 
-            variant="ghost" 
-            disabled={currentQuestion === questions.length - 1 || !currentQuestionAnswered}
             onClick={handleNext}
+            disabled={!currentQuestionAnswered}
+            className="bg-gathr-coral hover:bg-gathr-coral/90"
           >
             Next
           </Button>

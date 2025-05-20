@@ -18,6 +18,11 @@ https://gathr-social-match.lovable.app/
 - Event creation and management
 - Booking system for events
 - User profile management
+- Gathr Circle for managing connections
+- Event attendee viewing (24 hours before event)
+- Messaging system for attendees
+- Post-event feedback collection
+- Personality-based matching algorithm
 
 ## Technologies Used
 
@@ -84,7 +89,7 @@ pip install -r ../requirements.txt
 
 5. Start the Flask server
 ```bash
-python app.py
+python run.py
 ```
 
 The backend API will be available at `http://localhost:5000`
@@ -98,11 +103,13 @@ The backend API will be available at `http://localhost:5000`
   - `layouts/` - Page layout components
   - `pages/` - Main application pages
   - `types/` - TypeScript type definitions
+  - `api/` - API client for backend communication
 - `backend/`
   - `app.py` - Main Flask application entry point
   - `models.py` - SQLAlchemy database models
   - `database.py` - Database configuration and initialization
   - `ai.py` - AI algorithms for personality analysis and matching
+  - `run.py` - Script to start the Flask server
 
 ## Key Components
 
@@ -116,12 +123,14 @@ The backend API will be available at `http://localhost:5000`
 - `FindEvents.tsx` - Main event discovery page
 - `CreateEvent.tsx` - Event creation form
 - `UpcomingEvents.tsx` - User's booked and created events
-- `EventCard.tsx` - Reusable event card component
+- `EventDetailDialog.tsx` - Detailed event information
 - `EventFilterDialog.tsx` - Event filtering interface
 - RESTful API endpoints for event operations
 
-### User Profile
+### User Profile & Social
 - `Profile.tsx` - User profile management
+- `GathrCircle.tsx` - User's connections and messaging
+- `FeedbackDialog.tsx` - Post-event feedback collection
 - Personality trait storage and analysis
 
 ### AI Components
@@ -132,6 +141,18 @@ The backend API will be available at `http://localhost:5000`
 ## Layouts
 - `MainLayout.tsx` - Layout for authenticated pages with bottom navigation
 - `AuthLayout.tsx` - Layout for authentication pages
+
+## User Flow
+1. User signs up or logs in
+2. New users complete a personality test
+3. Users are directed to the event discovery page
+4. Users can browse, search, and filter events
+5. Users can view event details and book events
+6. Users can see attendees 24 hours before the event
+7. Users can message up to 10% of attendees
+8. Users can add connections to their Gathr Circle
+9. After events, users can provide feedback
+10. The system uses feedback to improve recommendations
 
 ## Mobile & Desktop Compatibility
 The application is fully responsive and works well on both iPhone and desktop devices. It utilizes:
@@ -144,49 +165,26 @@ The application is fully responsive and works well on both iPhone and desktop de
 
 ✅ Frontend user interface  
 ✅ Responsive design for mobile and desktop  
-✅ User authentication (frontend interface)  
+✅ User authentication (frontend interface and backend)  
 ✅ Personality test with trait analysis  
 ✅ Event discovery with infinite scrolling  
-✅ User profiles with personality traits  
+✅ Event detail view  
 ✅ Backend API structure with Flask  
 ✅ Database models for users, events, and attendance  
 ✅ API endpoints for core functionality  
-✅ Basic AI matching algorithm  
+✅ User connection management (Gathr Circle)  
+✅ Post-event feedback system  
+✅ Attendee viewing (24 hours before event)  
 
-## Limitations and Planned Improvements
+## Limitations and Future Improvements
 
-- **Current Backend**: The backend is implemented but needs to be integrated with the frontend
-- **Database Connection**: Frontend needs to be connected to the backend API instead of mock data
-- **AI Model Training**: The personality matching algorithm needs training with real user data
-- **Real-time Features**: Add WebSockets for real-time notifications and updates
+- **Database Population**: Add sample data to demonstrate functionality
+- **Real-time Messaging**: Implement WebSockets for real-time chat
 - **Social Media Integration**: Add OAuth for social media login and personality analysis
-- **In-app Messaging**: Implement chat functionality between event attendees
-- **Event Ratings**: Add a feedback system for events to improve recommendations
-- **Mobile App**: Develop native mobile applications for iOS and Android
-
-## API Endpoints
-
-### Authentication
-- POST `/api/register` - Register a new user
-- POST `/api/login` - User login
-
-### Personality
-- POST `/api/personality-test` - Submit personality test results
-
-### Events
-- GET `/api/events` - Get events with filtering and pagination
-- POST `/api/events` - Create a new event
-- POST `/api/events/<event_id>/book` - Book attendance for an event
-- GET `/api/events/upcoming` - Get user's upcoming events
-
-## User Flow
-1. User signs up or logs in
-2. New users complete a personality test
-3. Users are directed to the event discovery page
-4. Users can browse, search, and filter events
-5. Users can book events or create their own
-6. Users can manage their bookings and created events
-7. Users can view and edit their profile
+- **Advanced AI Models**: Further train the personality matching algorithm with real user data
+- **Push Notifications**: Add notification system for event reminders and messages
+- **Mobile Apps**: Develop native mobile applications for iOS and Android
+- **Payment Processing**: Integrate payment system for paid events
 
 ## Contributing
 Contributions are welcome! Please feel free to submit a Pull Request.

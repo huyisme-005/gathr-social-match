@@ -4,27 +4,34 @@ Gathr Backend Application
 
 This is the main entry point for the Gathr backend Flask API.
 It provides the endpoints for authentication, event management,
-and personality analysis using AI algorithms.
-
-Dependencies: See requirements.txt
+personality analysis, social connections, and messaging.
 """
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import timedelta
+from datetime import timedelta, datetime
+from sqlalchemy import desc, and_, func
 
 # Import modules
 from database import db_session, init_db
-from models import User, Event, Attendance
-from ai import analyze_personality, calculate_match_score
+from models import User, Event, Attendance, Connection, Message, Feedback
+from ai import (
+    analyze_personality, 
+    calculate_match_score, 
+    recommend_events, 
+    calculate_user_compatibility,
+    recommend_connections,
+    select_message_recipients,
+    process_event_feedback
+)
 
 # Create Flask application
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 # Configure application
-app.config['JWT_SECRET_KEY'] = 'your-secret-key-replace-in-production'  # Replace with env variable in production
+app.config['JWT_SECRET_KEY'] = 'your-secret-key-replace-in-production'
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=1)
 
 # Initialize JWT
@@ -337,19 +344,43 @@ def get_upcoming_events():
     Returns:
     - Events the user has booked
     - Events the user has created
+    - Past events for feedback
     """
     current_user_id = get_jwt_identity()
+    current_date = datetime.now()
     
     # Get events user is attending
     attended_events = (
         Event.query
         .join(Attendance)
-        .filter(Attendance.user_id == current_user_id)
+        .filter(
+            Attendance.user_id == current_user_id,
+            Event.date >= current_date
+        )
         .all()
     )
     
     # Get events user has created
-    created_events = Event.query.filter_by(creator_id=current_user_id).all()
+    created_events = Event.query.filter(
+        Event.creator_id == current_user_id,
+        Event.date >= current_date
+    ).all()
+    
+    # Get past events that need feedback
+    feedback_needed_events = (
+        Event.query
+        .join(Attendance)
+        .outerjoin(Feedback, and_(
+            Feedback.event_id == Event.id,
+            Feedback.user_id == current_user_id
+        ))
+        .filter(
+            Attendance.user_id == current_user_id,
+            Event.date < current_date,
+            Feedback.id == None  # No feedback given yet
+        )
+        .all()
+    )
     
     # Format events
     def format_event(event, is_creator):
@@ -373,13 +404,427 @@ def get_upcoming_events():
     
     attended_events_data = [format_event(event, False) for event in attended_events]
     created_events_data = [format_event(event, True) for event in created_events]
+    feedback_events_data = [format_event(event, False) for event in feedback_needed_events]
     
     return jsonify({
         "attendingEvents": attended_events_data,
-        "createdEvents": created_events_data
+        "createdEvents": created_events_data,
+        "feedbackEvents": feedback_events_data
+    }), 200
+
+@app.route('/api/events/<event_id>/attendees', methods=['GET'])
+@jwt_required()
+def get_event_attendees(event_id):
+    """
+    Get attendees for an event
+    Only available within 24 hours of the event and if the user is attending
+    
+    URL parameters:
+    - event_id: ID of the event
+    
+    Returns:
+    - List of attendees with personality match scores
+    """
+    current_user_id = get_jwt_identity()
+    
+    # Get current user
+    user = User.query.get(current_user_id)
+    
+    # Check if user completed personality test
+    if not user.has_completed_personality_test:
+        return jsonify({"error": "Complete personality test to view attendees"}), 400
+    
+    # Check if event exists
+    event = Event.query.get(event_id)
+    if not event:
+        return jsonify({"error": "Event not found"}), 404
+    
+    # Check if user is attending the event
+    is_attending = Attendance.query.filter_by(
+        user_id=current_user_id, event_id=event_id
+    ).first() is not None
+    
+    if not is_attending:
+        return jsonify({"error": "Only attendees can view other attendees"}), 403
+    
+    # Check if the event is within 24 hours
+    time_to_event = event.date - datetime.now()
+    if time_to_event.total_seconds() > 24 * 60 * 60:
+        return jsonify({"error": "Attendee list available only within 24 hours of event"}), 403
+    
+    # Get all attendees except current user
+    attendees = (
+        User.query
+        .join(Attendance)
+        .filter(
+            Attendance.event_id == event_id,
+            User.id != current_user_id
+        )
+        .all()
+    )
+    
+    # Calculate compatible users that can be messaged
+    messageable_ids = select_message_recipients(attendees)
+    
+    # Format attendees data with compatibility scores
+    attendees_data = []
+    for attendee in attendees:
+        compatibility_score = 50  # Default score
+        
+        # Calculate compatibility if both users have personality data
+        if user.personality_tags and attendee.personality_tags:
+            compatibility_score = calculate_user_compatibility(
+                user.personality_tags, 
+                attendee.personality_tags
+            )
+        
+        # Add to attendees list
+        attendees_data.append({
+            "id": attendee.id,
+            "name": attendee.name,
+            "personalityMatch": compatibility_score,
+            "personalityTags": attendee.personality_tags or [],
+            "canMessage": attendee.id in messageable_ids
+        })
+    
+    # Sort by compatibility score (descending)
+    attendees_data.sort(key=lambda x: x["personalityMatch"], reverse=True)
+    
+    return jsonify({
+        "attendees": attendees_data
+    }), 200
+
+@app.route('/api/events/<event_id>/feedback', methods=['POST'])
+@jwt_required()
+def submit_event_feedback(event_id):
+    """
+    Submit feedback for an event
+    
+    URL parameters:
+    - event_id: ID of the event
+    
+    Request body:
+    - rating: Numeric rating (1-5)
+    - enjoyedMost: Array of what user enjoyed most
+    - comment: Text feedback
+    
+    Returns:
+    - Confirmation of feedback submission
+    """
+    current_user_id = get_jwt_identity()
+    data = request.json
+    
+    # Check if event exists
+    event = Event.query.get(event_id)
+    if not event:
+        return jsonify({"error": "Event not found"}), 404
+    
+    # Check if user attended the event
+    attendance = Attendance.query.filter_by(
+        user_id=current_user_id, event_id=event_id
+    ).first()
+    
+    if not attendance:
+        return jsonify({"error": "Can only submit feedback for attended events"}), 403
+    
+    # Check if feedback already submitted
+    existing_feedback = Feedback.query.filter_by(
+        user_id=current_user_id, event_id=event_id
+    ).first()
+    
+    if existing_feedback:
+        return jsonify({"error": "Feedback already submitted for this event"}), 400
+    
+    # Create feedback record
+    feedback = Feedback(
+        event_id=event_id,
+        user_id=current_user_id,
+        rating=data.get('rating', 0),
+        enjoyed_most=data.get('enjoyedMost', []),
+        comment=data.get('comment', '')
+    )
+    
+    db_session.add(feedback)
+    db_session.commit()
+    
+    return jsonify({
+        "message": "Feedback submitted successfully",
+        "eventId": event_id
+    }), 201
+
+# Social routes
+@app.route('/api/circle', methods=['GET'])
+@jwt_required()
+def get_circle():
+    """
+    Get the user's Gathr circle connections
+    
+    Returns:
+    - List of connections with personality match scores
+    """
+    current_user_id = get_jwt_identity()
+    
+    # Get current user
+    user = User.query.get(current_user_id)
+    
+    # Get all connections
+    connections = (
+        User.query
+        .join(Connection, Connection.connected_user_id == User.id)
+        .filter(Connection.user_id == current_user_id)
+        .all()
+    )
+    
+    # Format connections data with compatibility scores
+    connections_data = []
+    for connection in connections:
+        compatibility_score = 50  # Default score
+        
+        # Calculate compatibility if both users have personality data
+        if user.personality_tags and connection.personality_tags:
+            compatibility_score = calculate_user_compatibility(
+                user.personality_tags, 
+                connection.personality_tags
+            )
+        
+        # Get number of shared events
+        shared_events_count = db_session.query(func.count(Attendance.event_id)).filter(
+            Attendance.user_id == current_user_id,
+            Attendance.event_id.in_(
+                db_session.query(Attendance.event_id).filter(
+                    Attendance.user_id == connection.id
+                )
+            )
+        ).scalar()
+        
+        # Add to connections list
+        connections_data.append({
+            "id": connection.id,
+            "name": connection.name,
+            "personalityMatch": compatibility_score,
+            "personalityTags": connection.personality_tags or [],
+            "eventsAttended": shared_events_count
+        })
+    
+    # Sort by compatibility score (descending)
+    connections_data.sort(key=lambda x: x["personalityMatch"], reverse=True)
+    
+    return jsonify({
+        "connections": connections_data
+    }), 200
+
+@app.route('/api/circle/add', methods=['POST'])
+@jwt_required()
+def add_to_circle():
+    """
+    Add a user to the Gathr circle
+    
+    Request body:
+    - userId: ID of the user to add to circle
+    
+    Returns:
+    - Confirmation of the connection
+    """
+    current_user_id = get_jwt_identity()
+    data = request.json
+    
+    # Get user ID to connect with
+    connected_user_id = data.get('userId')
+    
+    # Check if the user exists
+    connected_user = User.query.get(connected_user_id)
+    if not connected_user:
+        return jsonify({"error": "User not found"}), 404
+    
+    # Check if connection already exists
+    existing_connection = Connection.query.filter_by(
+        user_id=current_user_id, connected_user_id=connected_user_id
+    ).first()
+    
+    if existing_connection:
+        return jsonify({"error": "Already in your Gathr circle"}), 400
+    
+    # Create connection
+    connection = Connection(
+        user_id=current_user_id,
+        connected_user_id=connected_user_id
+    )
+    
+    db_session.add(connection)
+    db_session.commit()
+    
+    return jsonify({
+        "message": "Added to your Gathr circle",
+        "userId": connected_user_id
+    }), 201
+
+@app.route('/api/circle/remove', methods=['POST'])
+@jwt_required()
+def remove_from_circle():
+    """
+    Remove a user from the Gathr circle
+    
+    Request body:
+    - userId: ID of the user to remove from circle
+    
+    Returns:
+    - Confirmation of the removal
+    """
+    current_user_id = get_jwt_identity()
+    data = request.json
+    
+    # Get user ID to disconnect from
+    connected_user_id = data.get('userId')
+    
+    # Delete connection
+    connection = Connection.query.filter_by(
+        user_id=current_user_id, connected_user_id=connected_user_id
+    ).first()
+    
+    if not connection:
+        return jsonify({"error": "User not in your Gathr circle"}), 404
+    
+    db_session.delete(connection)
+    db_session.commit()
+    
+    return jsonify({
+        "message": "Removed from your Gathr circle",
+        "userId": connected_user_id
+    }), 200
+
+@app.route('/api/messages', methods=['POST'])
+@jwt_required()
+def send_message():
+    """
+    Send a message to another user
+    
+    Request body:
+    - recipientId: ID of the message recipient
+    - content: Message content
+    - eventId: Optional ID of the related event
+    
+    Returns:
+    - Confirmation of the message sending
+    """
+    current_user_id = get_jwt_identity()
+    data = request.json
+    
+    recipient_id = data.get('recipientId')
+    content = data.get('content')
+    event_id = data.get('eventId')
+    
+    # Check if recipient exists
+    recipient = User.query.get(recipient_id)
+    if not recipient:
+        return jsonify({"error": "Recipient not found"}), 404
+    
+    # If event is provided, check messaging permissions
+    if event_id:
+        # Check if event exists
+        event = Event.query.get(event_id)
+        if not event:
+            return jsonify({"error": "Event not found"}), 404
+        
+        # Check if both users are attending the event
+        user_attending = Attendance.query.filter_by(
+            user_id=current_user_id, event_id=event_id
+        ).first() is not None
+        
+        recipient_attending = Attendance.query.filter_by(
+            user_id=recipient_id, event_id=event_id
+        ).first() is not None
+        
+        if not (user_attending and recipient_attending):
+            return jsonify({"error": "Both users must be attending the event"}), 403
+        
+        # Check if the event is within 24 hours
+        time_to_event = event.date - datetime.now()
+        if time_to_event.total_seconds() > 24 * 60 * 60:
+            return jsonify({"error": "Messaging available only within 24 hours of event"}), 403
+        
+        # Check if recipient is in messageable users list
+        attendees = (
+            User.query
+            .join(Attendance)
+            .filter(
+                Attendance.event_id == event_id,
+                User.id != current_user_id
+            )
+            .all()
+        )
+        
+        messageable_ids = select_message_recipients(attendees)
+        if recipient_id not in messageable_ids:
+            return jsonify({"error": "Cannot message this user for this event"}), 403
+    
+    # Create message
+    message = Message(
+        sender_id=current_user_id,
+        recipient_id=recipient_id,
+        content=content,
+        event_id=event_id,
+        sent_at=datetime.now()
+    )
+    
+    db_session.add(message)
+    db_session.commit()
+    
+    return jsonify({
+        "message": "Message sent successfully",
+        "recipientId": recipient_id,
+        "sentAt": message.sent_at.isoformat()
+    }), 201
+
+@app.route('/api/messages/<user_id>', methods=['GET'])
+@jwt_required()
+def get_messages(user_id):
+    """
+    Get messages between current user and another user
+    
+    URL parameters:
+    - user_id: ID of the other user
+    
+    Returns:
+    - List of messages between the two users
+    """
+    current_user_id = get_jwt_identity()
+    
+    # Get all messages between the two users
+    messages = Message.query.filter(
+        ((Message.sender_id == current_user_id) & (Message.recipient_id == user_id)) |
+        ((Message.sender_id == user_id) & (Message.recipient_id == current_user_id))
+    ).order_by(Message.sent_at).all()
+    
+    # Format messages
+    messages_data = []
+    for message in messages:
+        messages_data.append({
+            "id": message.id,
+            "senderId": message.sender_id,
+            "recipientId": message.recipient_id,
+            "content": message.content,
+            "eventId": message.event_id,
+            "sentAt": message.sent_at.isoformat(),
+            "readAt": message.read_at.isoformat() if message.read_at else None
+        })
+    
+    # Mark received messages as read
+    unread_messages = Message.query.filter(
+        Message.recipient_id == current_user_id,
+        Message.sender_id == user_id,
+        Message.read_at == None
+    ).all()
+    
+    for message in unread_messages:
+        message.read_at = datetime.now()
+    
+    db_session.commit()
+    
+    return jsonify({
+        "messages": messages_data
     }), 200
 
 # Main entry point
 if __name__ == '__main__':
-    init_db()  # Initialize database
+    init_db()
     app.run(debug=True)

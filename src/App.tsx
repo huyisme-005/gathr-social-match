@@ -28,6 +28,7 @@ import FindEvents from "./pages/FindEvents";
 import CreateEvent from "./pages/CreateEvent";
 import UpcomingEvents from "./pages/UpcomingEvents";
 import Profile from "./pages/Profile";
+import GathrCircle from "./pages/GathrCircle";
 
 // Context
 import { AuthProvider } from "./contexts/AuthContext";
@@ -62,6 +63,7 @@ const App = () => (
                 <Route path="/find-events" element={<FindEvents />} />
                 <Route path="/create-event" element={<CreateEvent />} />
                 <Route path="/upcoming-events" element={<UpcomingEvents />} />
+                <Route path="/gathr-circle" element={<GathrCircle />} />
                 <Route path="/profile" element={<Profile />} />
               </Route>
               

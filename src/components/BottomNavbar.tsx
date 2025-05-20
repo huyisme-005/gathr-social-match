@@ -7,7 +7,7 @@
  * The current route is highlighted with the app's primary coral color.
  */
 import { useNavigate, useLocation } from "react-router-dom";
-import { Search, CalendarPlus, CalendarCheck, UserRound } from "lucide-react";
+import { Search, CalendarPlus, CalendarCheck, UserRound, Users } from "lucide-react";
 
 const BottomNavbar = () => {
   // Hook for programmatic navigation
@@ -34,6 +34,11 @@ const BottomNavbar = () => {
       icon: <CalendarCheck className="h-6 w-6" />,
     },
     {
+      name: "Circle",
+      path: "/gathr-circle",
+      icon: <Users className="h-6 w-6" />,
+    },
+    {
       name: "Profile",
       path: "/profile",
       icon: <UserRound className="h-6 w-6" />,
@@ -47,7 +52,7 @@ const BottomNavbar = () => {
           <button
             key={item.path}
             onClick={() => navigate(item.path)}
-            className={`flex flex-col items-center justify-center py-3 px-2 w-1/4 ${
+            className={`flex flex-col items-center justify-center py-3 px-2 w-1/5 ${
               location.pathname === item.path 
                 ? "text-gathr-coral" // Active route gets coral color
                 : "text-gray-500 hover:text-gathr-coral" // Inactive routes are gray
