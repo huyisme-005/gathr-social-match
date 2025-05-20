@@ -24,7 +24,7 @@ const Header = () => {
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const isAdminPage = location.pathname === "/admin";
+  const isAdminPage = location.pathname.includes("/admin");
   
   const getInitials = (name: string) => {
     return name
