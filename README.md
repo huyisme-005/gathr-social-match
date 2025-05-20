@@ -6,6 +6,8 @@ Gathr is an AI-driven event platform that connects young professionals through c
 ## Overview
 
 Gathr helps users find events that match their personality and interests, connect with compatible attendees, and create their own events. The platform uses a personality quiz to understand user preferences and suggest relevant events.
+Link:
+https://gathr-social-match.lovable.app/
 
 ## Features
 
