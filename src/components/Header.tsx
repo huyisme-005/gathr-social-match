@@ -6,7 +6,7 @@
  * It contains the Gathr logo, account balance display, and logout button.
  */
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -16,12 +16,15 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, User, CreditCard, Shield } from "lucide-react";
+import { LogOut, User, CreditCard, Shield, ChevronLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import GathrLogo from "./GathrLogo";
 
 const Header = () => {
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAdminPage = location.pathname === "/admin";
   
   const getInitials = (name: string) => {
     return name
@@ -30,11 +33,42 @@ const Header = () => {
       .join('')
       .toUpperCase();
   };
+
+  const toggleAdminView = () => {
+    if (isAdminPage) {
+      navigate("/find-events");
+    } else {
+      navigate("/admin");
+    }
+  };
   
   return (
     <header className="border-b bg-background">
       <div className="container mx-auto flex items-center justify-between p-4">
-        <GathrLogo />
+        <div className="flex items-center">
+          <GathrLogo />
+          
+          {isAdmin && (
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={toggleAdminView}
+              className="ml-4 flex items-center gap-2"
+            >
+              {isAdminPage ? (
+                <>
+                  <ChevronLeft className="h-4 w-4" />
+                  <span>Return to App</span>
+                </>
+              ) : (
+                <>
+                  <Shield className="h-4 w-4" />
+                  <span>Admin Dashboard</span>
+                </>
+              )}
+            </Button>
+          )}
+        </div>
         
         {user && (
           <DropdownMenu>

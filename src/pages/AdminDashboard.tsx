@@ -13,48 +13,125 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PieChart, Pie, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { toast } from "@/components/ui/use-toast";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Search, Download, UserPlus, FileText } from "lucide-react";
+import axios from "axios";
+import { Label } from "@/components/ui/label";
 
-// Mock analytics data
-const userGrowthData = [
-  { month: "Jan", users: 1240 },
-  { month: "Feb", users: 1830 },
-  { month: "Mar", users: 2300 },
-  { month: "Apr", users: 3400 },
-  { month: "May", users: 4200 },
-  { month: "Jun", users: 5100 },
-  { month: "Jul", users: 6800 },
+// Simulate real-world data with randomized variations
+const generateRealData = () => {
+  // Base data
+  const baseUserGrowth = [1240, 1830, 2300, 3400, 4200, 5100, 6800];
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"];
+  
+  // Add random variations (+/- 10%)
+  const userGrowthData = baseUserGrowth.map((users, index) => {
+    const variation = users * (0.9 + Math.random() * 0.2); // +/- 10%
+    return {
+      month: months[index],
+      users: Math.round(variation)
+    };
+  });
+  
+  return {
+    userGrowthData,
+    eventData: [
+      { name: "Created", value: Math.round(850 * (0.9 + Math.random() * 0.2)) },
+      { name: "Attended", value: Math.round(3200 * (0.9 + Math.random() * 0.2)) },
+      { name: "Cancelled", value: Math.round(120 * (0.9 + Math.random() * 0.2)) },
+    ],
+    demographicData: [
+      { age: "18-24", users: Math.round(2500 * (0.9 + Math.random() * 0.2)) },
+      { age: "25-34", users: Math.round(4800 * (0.9 + Math.random() * 0.2)) },
+      { age: "35-44", users: Math.round(3100 * (0.9 + Math.random() * 0.2)) },
+      { age: "45-54", users: Math.round(1400 * (0.9 + Math.random() * 0.2)) },
+      { age: "55+", users: Math.round(800 * (0.9 + Math.random() * 0.2)) },
+    ],
+    usersByCountry: [
+      { country: "United States", users: Math.round(4200 * (0.9 + Math.random() * 0.2)) },
+      { country: "United Kingdom", users: Math.round(1800 * (0.9 + Math.random() * 0.2)) },
+      { country: "Germany", users: Math.round(1400 * (0.9 + Math.random() * 0.2)) },
+      { country: "Canada", users: Math.round(1100 * (0.9 + Math.random() * 0.2)) },
+      { country: "Australia", users: Math.round(950 * (0.9 + Math.random() * 0.2)) },
+      { country: "Others", users: Math.round(2550 * (0.9 + Math.random() * 0.2)) },
+    ]
+  };
+};
+
+// Mock user data for admin panel
+const mockUsers = [
+  { id: 1, name: "Sarah Johnson", email: "sarah@example.com", country: "United States", status: "active" },
+  { id: 2, name: "Michael Chen", email: "michael@example.com", country: "Canada", status: "active" },
+  { id: 3, name: "Emma Wilson", email: "emma@example.com", country: "United Kingdom", status: "premium" },
+  { id: 4, name: "Carlos Mendez", email: "carlos@example.com", country: "Spain", status: "suspended" },
+  { id: 5, name: "Priya Sharma", email: "priya@example.com", country: "India", status: "active" },
+  { id: 6, name: "David Kim", email: "david@example.com", country: "South Korea", status: "premium" },
+  { id: 7, name: "Fatima Al-Farsi", email: "fatima@example.com", country: "UAE", status: "active" },
+  { id: 8, name: "John Smith", email: "john@example.com", country: "Australia", status: "suspended" },
+  { id: 9, name: "Sophia Rodriguez", email: "sophia@example.com", country: "Mexico", status: "premium" },
+  { id: 10, name: "Mohammed Al-Karim", email: "mohammed@example.com", country: "Saudi Arabia", status: "active" },
+  { id: 11, name: "Anna Petrov", email: "anna@example.com", country: "Russia", status: "active" },
+  { id: 12, name: "Liu Wei", email: "liu@example.com", country: "China", status: "premium" },
 ];
 
-const eventData = [
-  { name: "Created", value: 850 },
-  { name: "Attended", value: 3200 },
-  { name: "Cancelled", value: 120 },
-];
-
-const demographicData = [
-  { age: "18-24", users: 2500 },
-  { age: "25-34", users: 4800 },
-  { age: "35-44", users: 3100 },
-  { age: "45-54", users: 1400 },
-  { age: "55+", users: 800 },
-];
-
-const usersByCountry = [
-  { country: "United States", users: 4200 },
-  { country: "United Kingdom", users: 1800 },
-  { country: "Germany", users: 1400 },
-  { country: "Canada", users: 1100 },
-  { country: "Australia", users: 950 },
-  { country: "Others", users: 2550 },
+// Mock security alerts
+const securityAlerts = [
+  {
+    id: 1,
+    type: "critical",
+    title: "Multiple failed login attempts",
+    description: "10+ failed login attempts for user account john@example.com",
+    timestamp: "2 hours ago"
+  },
+  {
+    id: 2,
+    type: "warning",
+    title: "Unusual login activity",
+    description: "Login from new location for admin account",
+    timestamp: "1 day ago"
+  },
+  {
+    id: 3,
+    type: "warning",
+    title: "Spam activity detected",
+    description: "Potential spam messages sent by user robert@example.com",
+    timestamp: "3 days ago"
+  }
 ];
 
 const AdminDashboard = () => {
   const { isAdmin, user } = useAuth();
   const navigate = useNavigate();
+  
+  // State for dashboard data
   const [activeUsers, setActiveUsers] = useState(5687);
   const [totalEvents, setTotalEvents] = useState(3276);
   const [conversionRate, setConversionRate] = useState(12.4);
-  const [securityAlerts, setSecurityAlerts] = useState(3);
+  const [securityAlertCount, setSecurityAlertCount] = useState(3);
+  
+  // State for user management
+  const [filteredUsers, setFilteredUsers] = useState(mockUsers.slice(0, 4));
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [usersPerPage] = useState(4);
+  const [totalUsers] = useState(mockUsers.length);
+  
+  // State for analytics data
+  const [analyticsData, setAnalyticsData] = useState(generateRealData());
+  
+  // State for security report
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
+  const [reportData, setReportData] = useState(null);
+  
+  // State for investigation dialogs
+  const [investigationAlert, setInvestigationAlert] = useState(null);
+  const [showInvestigationDialog, setShowInvestigationDialog] = useState(false);
+  
+  // State for add user dialog
+  const [showAddUserDialog, setShowAddUserDialog] = useState(false);
+  const [newUser, setNewUser] = useState({ name: "", email: "", country: "", status: "active" });
   
   // Redirect non-admin users
   useEffect(() => {
@@ -67,6 +144,155 @@ const AdminDashboard = () => {
       navigate("/");
     }
   }, [isAdmin, navigate]);
+  
+  // Update user list when page changes
+  useEffect(() => {
+    const indexOfLastUser = currentPage * usersPerPage;
+    const indexOfFirstUser = indexOfLastUser - usersPerPage;
+    
+    // Filter by search term if provided
+    const filtered = searchTerm
+      ? mockUsers.filter(user => 
+          user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.country.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      : mockUsers;
+    
+    setFilteredUsers(filtered.slice(indexOfFirstUser, indexOfLastUser));
+  }, [currentPage, searchTerm, usersPerPage]);
+  
+  // Refresh analytics data periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAnalyticsData(generateRealData());
+      
+      // Simulate small changes to metrics
+      setActiveUsers(prev => Math.round(prev * (0.99 + Math.random() * 0.02)));
+      setTotalEvents(prev => Math.round(prev * (0.99 + Math.random() * 0.02)));
+      setConversionRate(prev => +(prev * (0.99 + Math.random() * 0.02)).toFixed(1));
+    }, 60000); // Update every minute
+    
+    return () => clearInterval(interval);
+  }, []);
+  
+  // Handle search
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); // Reset to first page when searching
+  };
+  
+  // Handle pagination
+  const handleNextPage = () => {
+    const maxPage = Math.ceil(
+      (searchTerm ? mockUsers.filter(user => 
+        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.country.toLowerCase().includes(searchTerm.toLowerCase())
+      ).length : mockUsers.length) / usersPerPage
+    );
+    
+    if (currentPage < maxPage) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+  
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+  
+  // Handle export users
+  const handleExport = () => {
+    // Create CSV string
+    const headers = ["Name", "Email", "Country", "Status"];
+    const csvRows = [headers.join(",")];
+    
+    mockUsers.forEach(user => {
+      const row = [user.name, user.email, user.country, user.status];
+      csvRows.push(row.join(","));
+    });
+    
+    // Create downloadable link
+    const csvString = csvRows.join("\n");
+    const blob = new Blob([csvString], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    
+    // Create temporary link and trigger download
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "gathr_users.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    toast({
+      title: "Export successful",
+      description: `${mockUsers.length} users exported to CSV`,
+    });
+  };
+  
+  // Handle security report generation
+  const handleGenerateReport = () => {
+    setIsGeneratingReport(true);
+    
+    // Simulate API call to generate report
+    setTimeout(() => {
+      setReportData({
+        generatedAt: new Date().toISOString(),
+        summary: {
+          totalAlerts: 12,
+          criticalAlerts: 1,
+          highAlerts: 4,
+          mediumAlerts: 7,
+          resolvedAlerts: 9
+        },
+        loginActivity: {
+          successfulLogins: 428,
+          failedLogins: 32,
+          suspiciousLogins: 7
+        },
+        vulnerabilities: [
+          { severity: "high", description: "Weak password policy enforcement", recommendation: "Implement stronger password requirements" },
+          { severity: "medium", description: "Session timeout too long", recommendation: "Reduce session timeout to 30 minutes" },
+          { severity: "low", description: "Missing HSTS headers", recommendation: "Configure HSTS headers on web server" }
+        ]
+      });
+      
+      setIsGeneratingReport(false);
+      setShowReportDialog(true);
+    }, 2000);
+  };
+  
+  // Handle investigation
+  const handleInvestigate = (alert) => {
+    setInvestigationAlert(alert);
+    setShowInvestigationDialog(true);
+  };
+  
+  // Handle add user
+  const handleAddUser = () => {
+    // Validate form
+    if (!newUser.name || !newUser.email || !newUser.country) {
+      toast({
+        title: "Missing information",
+        description: "Please fill out all required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Simulate API call to add user
+    toast({
+      title: "User added",
+      description: `${newUser.name} has been added to the platform`
+    });
+    
+    // Reset form and close dialog
+    setNewUser({ name: "", email: "", country: "", status: "active" });
+    setShowAddUserDialog(false);
+  };
   
   if (!isAdmin || !user) {
     return null;
@@ -116,7 +342,7 @@ const AdminDashboard = () => {
             <CardTitle className="text-sm font-medium text-muted-foreground">Security Alerts</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{securityAlerts}</div>
+            <div className="text-2xl font-bold">{securityAlertCount}</div>
             <p className="text-xs text-muted-foreground">-1 from last week</p>
           </CardContent>
         </Card>
@@ -141,7 +367,7 @@ const AdminDashboard = () => {
             <CardContent>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={userGrowthData}>
+                  <LineChart data={analyticsData.userGrowthData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis />
@@ -165,7 +391,7 @@ const AdminDashboard = () => {
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie 
-                        data={eventData} 
+                        data={analyticsData.eventData} 
                         cx="50%" 
                         cy="50%" 
                         outerRadius={80} 
@@ -189,7 +415,7 @@ const AdminDashboard = () => {
               <CardContent>
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={demographicData}>
+                    <BarChart data={analyticsData.demographicData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="age" />
                       <YAxis />
@@ -210,7 +436,7 @@ const AdminDashboard = () => {
             <CardContent>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={usersByCountry} layout="vertical">
+                  <BarChart data={analyticsData.usersByCountry} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis type="number" />
                     <YAxis dataKey="country" type="category" />
@@ -234,16 +460,26 @@ const AdminDashboard = () => {
             <CardContent>
               <div className="flex justify-between mb-4">
                 <div className="relative">
-                  <input 
-                    type="text" 
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input 
                     placeholder="Search users..." 
-                    className="pl-8 border border-gray-300 rounded-md h-10 focus:outline-none focus:ring-2 focus:ring-gathr-coral focus:border-transparent w-64"
+                    className="pl-8 w-64"
+                    value={searchTerm}
+                    onChange={handleSearch}
                   />
-                  <span className="absolute left-2 top-2.5 text-gray-400">🔍</span>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline">Export</Button>
-                  <Button className="bg-gathr-coral hover:bg-gathr-coral/90">Add User</Button>
+                  <Button variant="outline" onClick={handleExport} className="flex items-center gap-2">
+                    <Download className="h-4 w-4" />
+                    <span>Export</span>
+                  </Button>
+                  <Button 
+                    onClick={() => setShowAddUserDialog(true)}
+                    className="bg-gathr-coral hover:bg-gathr-coral/90 flex items-center gap-2"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    <span>Add User</span>
+                  </Button>
                 </div>
               </div>
               
@@ -259,73 +495,73 @@ const AdminDashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="border-t">
-                      <td className="py-3 px-4">Sarah Johnson</td>
-                      <td className="py-3 px-4">sarah@example.com</td>
-                      <td className="py-3 px-4">United States</td>
-                      <td className="py-3 px-4">
-                        <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">Active</span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex gap-2">
-                          <Button variant="ghost" size="sm">Edit</Button>
-                          <Button variant="ghost" size="sm" className="text-red-500">Suspend</Button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr className="border-t">
-                      <td className="py-3 px-4">Michael Chen</td>
-                      <td className="py-3 px-4">michael@example.com</td>
-                      <td className="py-3 px-4">Canada</td>
-                      <td className="py-3 px-4">
-                        <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">Active</span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex gap-2">
-                          <Button variant="ghost" size="sm">Edit</Button>
-                          <Button variant="ghost" size="sm" className="text-red-500">Suspend</Button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr className="border-t">
-                      <td className="py-3 px-4">Emma Wilson</td>
-                      <td className="py-3 px-4">emma@example.com</td>
-                      <td className="py-3 px-4">United Kingdom</td>
-                      <td className="py-3 px-4">
-                        <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs">Premium</span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex gap-2">
-                          <Button variant="ghost" size="sm">Edit</Button>
-                          <Button variant="ghost" size="sm" className="text-red-500">Suspend</Button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr className="border-t">
-                      <td className="py-3 px-4">Carlos Mendez</td>
-                      <td className="py-3 px-4">carlos@example.com</td>
-                      <td className="py-3 px-4">Spain</td>
-                      <td className="py-3 px-4">
-                        <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs">Suspended</span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex gap-2">
-                          <Button variant="ghost" size="sm">Edit</Button>
-                          <Button variant="ghost" size="sm" className="text-green-500">Activate</Button>
-                        </div>
-                      </td>
-                    </tr>
+                    {filteredUsers.map(user => (
+                      <tr key={user.id} className="border-t">
+                        <td className="py-3 px-4">{user.name}</td>
+                        <td className="py-3 px-4">{user.email}</td>
+                        <td className="py-3 px-4">{user.country}</td>
+                        <td className="py-3 px-4">
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            user.status === 'active' ? 'bg-green-100 text-green-700' : 
+                            user.status === 'premium' ? 'bg-amber-100 text-amber-700' : 
+                            'bg-red-100 text-red-700'
+                          }`}>
+                            {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex gap-2">
+                            <Button variant="ghost" size="sm">Edit</Button>
+                            {user.status !== 'suspended' ? (
+                              <Button variant="ghost" size="sm" className="text-red-500">Suspend</Button>
+                            ) : (
+                              <Button variant="ghost" size="sm" className="text-green-500">Activate</Button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
               
               <div className="mt-4 flex justify-between items-center">
                 <div className="text-sm text-muted-foreground">
-                  Showing 4 of 5,687 users
+                  Showing {filteredUsers.length} of {
+                    searchTerm 
+                      ? mockUsers.filter(user => 
+                          user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          user.country.toLowerCase().includes(searchTerm.toLowerCase())
+                        ).length 
+                      : totalUsers
+                  } users
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" disabled>Previous</Button>
-                  <Button variant="outline" size="sm">Next</Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleNextPage}
+                    disabled={
+                      currentPage >= Math.ceil(
+                        (searchTerm ? mockUsers.filter(user => 
+                          user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          user.country.toLowerCase().includes(searchTerm.toLowerCase())
+                        ).length : mockUsers.length) / usersPerPage
+                      )
+                    }
+                  >
+                    Next
+                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -344,45 +580,46 @@ const AdminDashboard = () => {
                 <div className="space-y-2">
                   <h3 className="text-lg font-medium">Active Alerts</h3>
                   <div className="border rounded-md divide-y">
-                    <div className="p-4 bg-red-50">
-                      <div className="flex items-start">
-                        <div className="mr-2 mt-0.5 text-red-500">⚠️</div>
-                        <div>
-                          <h4 className="font-medium text-red-700">Multiple failed login attempts</h4>
-                          <p className="text-sm text-red-600">10+ failed login attempts for user account john@example.com</p>
-                          <div className="flex justify-between items-center mt-2">
-                            <span className="text-xs text-red-600">2 hours ago</span>
-                            <Button size="sm" variant="outline" className="h-7">Investigate</Button>
+                    {securityAlerts.map(alert => (
+                      <div 
+                        key={alert.id} 
+                        className={`p-4 ${
+                          alert.type === 'critical' ? 'bg-red-50' : 
+                          alert.type === 'warning' ? 'bg-amber-50' : 'bg-blue-50'
+                        }`}
+                      >
+                        <div className="flex items-start">
+                          <div className={`mr-2 mt-0.5 ${
+                            alert.type === 'critical' ? 'text-red-500' : 
+                            alert.type === 'warning' ? 'text-amber-500' : 'text-blue-500'
+                          }`}>⚠️</div>
+                          <div>
+                            <h4 className={`font-medium ${
+                              alert.type === 'critical' ? 'text-red-700' : 
+                              alert.type === 'warning' ? 'text-amber-700' : 'text-blue-700'
+                            }`}>{alert.title}</h4>
+                            <p className={`text-sm ${
+                              alert.type === 'critical' ? 'text-red-600' : 
+                              alert.type === 'warning' ? 'text-amber-600' : 'text-blue-600'
+                            }`}>{alert.description}</p>
+                            <div className="flex justify-between items-center mt-2">
+                              <span className={`text-xs ${
+                                alert.type === 'critical' ? 'text-red-600' : 
+                                alert.type === 'warning' ? 'text-amber-600' : 'text-blue-600'
+                              }`}>{alert.timestamp}</span>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="h-7"
+                                onClick={() => handleInvestigate(alert)}
+                              >
+                                Investigate
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="p-4 bg-amber-50">
-                      <div className="flex items-start">
-                        <div className="mr-2 mt-0.5 text-amber-500">⚠️</div>
-                        <div>
-                          <h4 className="font-medium text-amber-700">Unusual login activity</h4>
-                          <p className="text-sm text-amber-600">Login from new location for admin account</p>
-                          <div className="flex justify-between items-center mt-2">
-                            <span className="text-xs text-amber-600">1 day ago</span>
-                            <Button size="sm" variant="outline" className="h-7">Investigate</Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-4 bg-amber-50">
-                      <div className="flex items-start">
-                        <div className="mr-2 mt-0.5 text-amber-500">⚠️</div>
-                        <div>
-                          <h4 className="font-medium text-amber-700">Spam activity detected</h4>
-                          <p className="text-sm text-amber-600">Potential spam messages sent by user robert@example.com</p>
-                          <div className="flex justify-between items-center mt-2">
-                            <span className="text-xs text-amber-600">3 days ago</span>
-                            <Button size="sm" variant="outline" className="h-7">Investigate</Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
                 
@@ -428,8 +665,17 @@ const AdminDashboard = () => {
               </div>
             </CardContent>
             <CardFooter>
-              <Button className="w-full bg-gathr-coral hover:bg-gathr-coral/90">
-                Generate Full Security Report
+              <Button 
+                className="w-full bg-gathr-coral hover:bg-gathr-coral/90 flex items-center gap-2"
+                onClick={handleGenerateReport}
+                disabled={isGeneratingReport}
+              >
+                {isGeneratingReport ? "Generating..." : (
+                  <>
+                    <FileText className="h-4 w-4" />
+                    <span>Generate Full Security Report</span>
+                  </>
+                )}
               </Button>
             </CardFooter>
           </Card>
@@ -462,7 +708,7 @@ const AdminDashboard = () => {
                       <p className="text-sm text-muted-foreground">Allow new users to register on the platform</p>
                     </div>
                     <div className="flex items-center h-7">
-                      <input type="checkbox" className="h-4 w-4" id="registration" checked />
+                      <input type="checkbox" className="h-4 w-4" id="registration" defaultChecked />
                     </div>
                   </div>
                   
@@ -472,7 +718,7 @@ const AdminDashboard = () => {
                       <p className="text-sm text-muted-foreground">Allow users to create new events</p>
                     </div>
                     <div className="flex items-center h-7">
-                      <input type="checkbox" className="h-4 w-4" id="event-creation" checked />
+                      <input type="checkbox" className="h-4 w-4" id="event-creation" defaultChecked />
                     </div>
                   </div>
                 </div>
@@ -541,6 +787,208 @@ const AdminDashboard = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      
+      {/* Security Report Dialog */}
+      <Dialog open={showReportDialog} onOpenChange={setShowReportDialog}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Security Report</DialogTitle>
+            <DialogDescription>
+              Generated on {reportData?.generatedAt ? new Date(reportData.generatedAt).toLocaleString() : ''}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {reportData && (
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+              <div>
+                <h3 className="text-lg font-medium mb-2">Executive Summary</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="border rounded-md p-3 text-center">
+                    <div className="text-2xl font-bold text-red-600">{reportData.summary.criticalAlerts}</div>
+                    <div className="text-sm">Critical Alerts</div>
+                  </div>
+                  <div className="border rounded-md p-3 text-center">
+                    <div className="text-2xl font-bold text-amber-600">{reportData.summary.highAlerts}</div>
+                    <div className="text-sm">High Alerts</div>
+                  </div>
+                  <div className="border rounded-md p-3 text-center">
+                    <div className="text-2xl font-bold text-blue-600">{reportData.summary.mediumAlerts}</div>
+                    <div className="text-sm">Medium Alerts</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-medium mb-2">Login Activity</h3>
+                <div className="border rounded-md p-4">
+                  <ul className="space-y-2">
+                    <li className="flex justify-between">
+                      <span>Successful logins (24h)</span>
+                      <span className="font-medium">{reportData.loginActivity.successfulLogins}</span>
+                    </li>
+                    <li className="flex justify-between">
+                      <span>Failed logins (24h)</span>
+                      <span className="font-medium text-amber-600">{reportData.loginActivity.failedLogins}</span>
+                    </li>
+                    <li className="flex justify-between">
+                      <span>Suspicious logins (24h)</span>
+                      <span className="font-medium text-red-600">{reportData.loginActivity.suspiciousLogins}</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-medium mb-2">Vulnerabilities</h3>
+                <div className="border rounded-md overflow-hidden">
+                  <table className="min-w-full">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="py-3 px-4 text-left">Severity</th>
+                        <th className="py-3 px-4 text-left">Description</th>
+                        <th className="py-3 px-4 text-left">Recommendation</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reportData.vulnerabilities.map((vuln, index) => (
+                        <tr key={index} className="border-t">
+                          <td className="py-3 px-4">
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              vuln.severity === 'high' ? 'bg-red-100 text-red-700' : 
+                              vuln.severity === 'medium' ? 'bg-amber-100 text-amber-700' : 
+                              'bg-blue-100 text-blue-700'
+                            }`}>
+                              {vuln.severity.charAt(0).toUpperCase() + vuln.severity.slice(1)}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4">{vuln.description}</td>
+                          <td className="py-3 px-4">{vuln.recommendation}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline">Download PDF</Button>
+            <Button onClick={() => setShowReportDialog(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Investigation Dialog */}
+      <Dialog open={showInvestigationDialog} onOpenChange={setShowInvestigationDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Investigation: {investigationAlert?.title}</DialogTitle>
+            <DialogDescription>
+              {investigationAlert?.description}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="border rounded-md p-4">
+              <h3 className="font-medium mb-2">Alert Details</h3>
+              <ul className="space-y-2 text-sm">
+                <li className="flex justify-between">
+                  <span className="text-muted-foreground">Alert ID:</span>
+                  <span className="font-medium">{investigationAlert?.id}</span>
+                </li>
+                <li className="flex justify-between">
+                  <span className="text-muted-foreground">Type:</span>
+                  <span className="font-medium">{investigationAlert?.type}</span>
+                </li>
+                <li className="flex justify-between">
+                  <span className="text-muted-foreground">Timestamp:</span>
+                  <span className="font-medium">{investigationAlert?.timestamp}</span>
+                </li>
+              </ul>
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="font-medium">Action</h3>
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1">Dismiss</Button>
+                <Button variant="destructive" className="flex-1">Block User</Button>
+                <Button className="flex-1 bg-gathr-coral hover:bg-gathr-coral/90">Reset Password</Button>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button onClick={() => setShowInvestigationDialog(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Add User Dialog */}
+      <Dialog open={showAddUserDialog} onOpenChange={setShowAddUserDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New User</DialogTitle>
+            <DialogDescription>
+              Create a new user account on the platform
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Full Name</Label>
+              <Input 
+                id="name" 
+                value={newUser.name}
+                onChange={(e) => setNewUser({...newUser, name: e.target.value})}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input 
+                id="email" 
+                type="email"
+                value={newUser.email}
+                onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="country">Country</Label>
+              <Input 
+                id="country"
+                value={newUser.country}
+                onChange={(e) => setNewUser({...newUser, country: e.target.value})}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <select 
+                id="status"
+                className="w-full border rounded-md px-3 py-2"
+                value={newUser.status}
+                onChange={(e) => setNewUser({...newUser, status: e.target.value})}
+              >
+                <option value="active">Active</option>
+                <option value="premium">Premium</option>
+                <option value="suspended">Suspended</option>
+              </select>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddUserDialog(false)}>Cancel</Button>
+            <Button 
+              onClick={handleAddUser}
+              className="bg-gathr-coral hover:bg-gathr-coral/90"
+            >
+              Add User
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -1,4 +1,3 @@
-
 """
 Gathr Backend Application
 
@@ -12,9 +11,13 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import timedelta, datetime
 from sqlalchemy import desc, and_, func
+import os
+from flask_socketio import SocketIO, emit, join_room, leave_room
+import time
+import secrets
 
 # Import modules
-from database import db_session, init_db
+from database import db_session, init_db, backup_to_json, restore_from_json
 from models import User, Event, Attendance, Connection, Message, Feedback
 from ai import (
     analyze_personality, 
@@ -31,17 +34,86 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 # Configure application
-app.config['JWT_SECRET_KEY'] = 'your-secret-key-replace-in-production'
+app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', secrets.token_hex(32))
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=1)
 
 # Initialize JWT
 jwt = JWTManager(app)
+
+# Initialize Socket.IO for real-time communication
+socketio = SocketIO(app, cors_allowed_origins="*")
+
+# Room registry for active connections
+active_rooms = {}
 
 # Initialize database
 @app.teardown_appcontext
 def shutdown_session(exception=None):
     """Close database session when app context ends"""
     db_session.remove()
+
+# Socket.IO event handlers
+@socketio.on('connect')
+def handle_connect():
+    """Handle client connection"""
+    print(f"Client connected: {request.sid}")
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    """Handle client disconnection"""
+    print(f"Client disconnected: {request.sid}")
+    # Remove user from any rooms they were in
+    for room_id, users in list(active_rooms.items()):
+        if request.sid in users:
+            users.remove(request.sid)
+            # Clean up empty rooms
+            if not users:
+                del active_rooms[room_id]
+
+@socketio.on('join')
+def handle_join(data):
+    """Handle client joining a room"""
+    room = data.get('room')
+    if not room:
+        return
+    
+    join_room(room)
+    if room not in active_rooms:
+        active_rooms[room] = []
+    active_rooms[room].append(request.sid)
+    
+    print(f"Client {request.sid} joined room: {room}")
+    emit('user_joined', {'user': request.sid}, room=room)
+
+@socketio.on('leave')
+def handle_leave(data):
+    """Handle client leaving a room"""
+    room = data.get('room')
+    if not room:
+        return
+    
+    leave_room(room)
+    if room in active_rooms and request.sid in active_rooms[room]:
+        active_rooms[room].remove(request.sid)
+        # Clean up empty rooms
+        if not active_rooms[room]:
+            del active_rooms[room]
+    
+    print(f"Client {request.sid} left room: {room}")
+    emit('user_left', {'user': request.sid}, room=room)
+
+@socketio.on('message')
+def handle_message(data):
+    """Handle real-time messaging"""
+    room = data.get('room')
+    if not room or room not in active_rooms:
+        return
+    
+    # Add server timestamp
+    data['timestamp'] = time.time()
+    
+    # Broadcast message to the room
+    emit('message', data, room=room)
 
 # Routes
 @app.route('/api/healthcheck', methods=['GET'])
@@ -66,34 +138,49 @@ def register():
     """
     data = request.json
     
-    # Check if email already exists
-    if User.query.filter_by(email=data['email']).first():
-        return jsonify({"error": "Email already registered"}), 409
-    
-    # Create new user
-    new_user = User(
-        name=data['name'],
-        email=data['email'],
-        password_hash=generate_password_hash(data['password'])
-    )
-    
-    # Save to database
-    db_session.add(new_user)
-    db_session.commit()
-    
-    # Create access token
-    access_token = create_access_token(identity=new_user.id)
-    
-    return jsonify({
-        "token": access_token,
-        "user": {
+    try:
+        # Check if email already exists
+        if User.query.filter_by(email=data['email']).first():
+            return jsonify({"error": "Email already registered"}), 409
+        
+        # Create new user
+        new_user = User(
+            name=data['name'],
+            email=data['email'],
+            password_hash=generate_password_hash(data['password'])
+        )
+        
+        # Save to database
+        db_session.add(new_user)
+        db_session.commit()
+        
+        # Backup to JSON as fallback
+        user_data = {
             "id": new_user.id,
             "name": new_user.name,
             "email": new_user.email,
-            "hasCompletedPersonalityTest": False,
-            "personalityTags": []
+            "password_hash": new_user.password_hash,
+            "created_at": datetime.now().isoformat()
         }
-    }), 201
+        backup_to_json("users", user_data)
+        
+        # Create access token
+        access_token = create_access_token(identity=new_user.id)
+        
+        return jsonify({
+            "token": access_token,
+            "user": {
+                "id": new_user.id,
+                "name": new_user.name,
+                "email": new_user.email,
+                "hasCompletedPersonalityTest": False,
+                "personalityTags": []
+            }
+        }), 201
+    
+    except Exception as e:
+        print(f"Registration error: {str(e)}")
+        return jsonify({"error": "Registration failed", "details": str(e)}), 500
 
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -110,26 +197,51 @@ def login():
     """
     data = request.json
     
-    # Find the user
-    user = User.query.filter_by(email=data['email']).first()
+    try:
+        # Try to find the user in the database
+        user = User.query.filter_by(email=data['email']).first()
+        
+        # If not found, check the JSON backup
+        if not user:
+            users = restore_from_json("users")
+            user_data = next((u for u in users if u["email"] == data['email']), None)
+            
+            if user_data and check_password_hash(user_data["password_hash"], data['password']):
+                # Create access token
+                access_token = create_access_token(identity=user_data["id"])
+                
+                return jsonify({
+                    "token": access_token,
+                    "user": {
+                        "id": user_data["id"],
+                        "name": user_data["name"],
+                        "email": user_data["email"],
+                        "hasCompletedPersonalityTest": False,
+                        "personalityTags": []
+                    }
+                }), 200
+        
+        # Check if user exists and password is correct
+        if not user or not check_password_hash(user.password_hash, data['password']):
+            return jsonify({"error": "Invalid email or password"}), 401
+        
+        # Create access token
+        access_token = create_access_token(identity=user.id)
+        
+        return jsonify({
+            "token": access_token,
+            "user": {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+                "hasCompletedPersonalityTest": user.has_completed_personality_test,
+                "personalityTags": user.personality_tags or []
+            }
+        }), 200
     
-    # Check if user exists and password is correct
-    if not user or not check_password_hash(user.password_hash, data['password']):
-        return jsonify({"error": "Invalid email or password"}), 401
-    
-    # Create access token
-    access_token = create_access_token(identity=user.id)
-    
-    return jsonify({
-        "token": access_token,
-        "user": {
-            "id": user.id,
-            "name": user.name,
-            "email": user.email,
-            "hasCompletedPersonalityTest": user.has_completed_personality_test,
-            "personalityTags": user.personality_tags or []
-        }
-    }), 200
+    except Exception as e:
+        print(f"Login error: {str(e)}")
+        return jsonify({"error": "Login failed", "details": str(e)}), 500
 
 # Personality Test route
 @app.route('/api/personality-test', methods=['POST'])
@@ -147,22 +259,42 @@ def submit_personality_test():
     current_user_id = get_jwt_identity()
     data = request.json
     
-    # Get answers from request
-    answers = data.get('answers', {})
+    try:
+        # Get answers from request
+        answers = data.get('answers', {})
+        
+        # Use AI module to analyze personality
+        personality_traits = analyze_personality(answers)
+        
+        # Update user in database
+        user = User.query.get(current_user_id)
+        if user:
+            user.personality_tags = personality_traits
+            user.has_completed_personality_test = True
+            db_session.commit()
+            
+            # Backup to JSON
+            user_data = {
+                "id": user.id,
+                "personality_tags": personality_traits,
+                "has_completed_personality_test": True
+            }
+            backup_to_json("personality_test", user_data)
+        
+        # Send real-time update to relevant rooms
+        if str(current_user_id) in active_rooms:
+            socketio.emit('personality_updated', {
+                "userId": current_user_id,
+                "personalityTags": personality_traits
+            }, room=str(current_user_id))
+        
+        return jsonify({
+            "personalityTags": personality_traits
+        }), 200
     
-    # Use AI module to analyze personality
-    personality_traits = analyze_personality(answers)
-    
-    # Update user in database
-    user = User.query.get(current_user_id)
-    if user:
-        user.personality_tags = personality_traits
-        user.has_completed_personality_test = True
-        db_session.commit()
-    
-    return jsonify({
-        "personalityTags": personality_traits
-    }), 200
+    except Exception as e:
+        print(f"Personality test error: {str(e)}")
+        return jsonify({"error": "Failed to process personality test", "details": str(e)}), 500
 
 # Event routes
 @app.route('/api/events', methods=['GET'])
@@ -182,61 +314,67 @@ def get_events():
     - Pagination metadata
     """
     current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
     
-    # Get pagination parameters
-    page = int(request.args.get('page', 1))
-    limit = int(request.args.get('limit', 10))
-    category = request.args.get('category', None)
+    try:
+        user = User.query.get(current_user_id)
+        
+        # Get pagination parameters
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 10))
+        category = request.args.get('category', None)
+        
+        # Base query
+        query = Event.query
+        
+        # Apply category filter if provided
+        if category:
+            query = query.filter(Event.categories.contains([category]))
+        
+        # Paginate results
+        events_page = query.paginate(page=page, per_page=limit, error_out=False)
+        
+        # Format and add match scores
+        events_data = []
+        for event in events_page.items:
+            # Calculate match score if user has completed personality test
+            match_score = 0
+            if user and user.has_completed_personality_test and user.personality_tags:
+                match_score = calculate_match_score(user.personality_tags, event.categories)
+                
+            # Format event data
+            events_data.append({
+                "id": event.id,
+                "title": event.title,
+                "description": event.description,
+                "date": event.date.strftime("%Y-%m-%d"),
+                "time": event.time.strftime("%H:%M"),
+                "location": event.location,
+                "imageUrl": event.image_url,
+                "capacity": event.capacity,
+                "attendees": event.attendees.count(),
+                "categories": event.categories,
+                "creator": {
+                    "id": event.creator.id,
+                    "name": event.creator.name
+                },
+                "matchScore": match_score
+            })
+        
+        return jsonify({
+            "events": events_data,
+            "pagination": {
+                "page": page,
+                "limit": limit,
+                "total": events_page.total,
+                "pages": events_page.pages,
+                "hasNext": events_page.has_next,
+                "hasPrev": events_page.has_prev
+            }
+        }), 200
     
-    # Base query
-    query = Event.query
-    
-    # Apply category filter if provided
-    if category:
-        query = query.filter(Event.categories.contains([category]))
-    
-    # Paginate results
-    events_page = query.paginate(page=page, per_page=limit, error_out=False)
-    
-    # Format and add match scores
-    events_data = []
-    for event in events_page.items:
-        # Calculate match score if user has completed personality test
-        match_score = 0
-        if user and user.has_completed_personality_test and user.personality_tags:
-            match_score = calculate_match_score(user.personality_tags, event.categories)
-            
-        # Format event data
-        events_data.append({
-            "id": event.id,
-            "title": event.title,
-            "description": event.description,
-            "date": event.date.strftime("%Y-%m-%d"),
-            "time": event.time.strftime("%H:%M"),
-            "location": event.location,
-            "imageUrl": event.image_url,
-            "capacity": event.capacity,
-            "attendees": event.attendees.count(),
-            "categories": event.categories,
-            "creator": {
-                "id": event.creator.id,
-                "name": event.creator.name
-            },
-            "matchScore": match_score
-        })
-    
-    return jsonify({
-        "events": events_data,
-        "pagination": {
-            "page": page,
-            "limit": limit,
-            "total": events_page.total,
-            "pages": events_page.pages,
-            "hasNext": events_page.has_next,
-            "hasPrev": events_page.has_prev
-        }
-    }), 200
+    except Exception as e:
+        print(f"Get events error: {str(e)}")
+        return jsonify({"error": "Failed to retrieve events", "details": str(e)}), 500
 
 @app.route('/api/events', methods=['POST'])
 @jwt_required()
@@ -824,7 +962,145 @@ def get_messages(user_id):
         "messages": messages_data
     }), 200
 
+# Admin routes
+@app.route('/api/admin/stats', methods=['GET'])
+@jwt_required()
+def admin_stats():
+    """
+    Get admin dashboard statistics
+    
+    Returns:
+    - User statistics
+    - Event statistics
+    - Security metrics
+    """
+    current_user_id = get_jwt_identity()
+    
+    # Check if user is an admin
+    user = User.query.get(current_user_id)
+    if not user or not getattr(user, 'is_admin', False):
+        return jsonify({"error": "Unauthorized access"}), 403
+    
+    try:
+        # Get user statistics
+        total_users = User.query.count()
+        active_users = User.query.filter(User.last_active > (datetime.now() - timedelta(days=30))).count()
+        premium_users = User.query.filter(User.tier.in_(["premium", "enterprise"])).count()
+        
+        # Get event statistics
+        total_events = Event.query.count()
+        upcoming_events = Event.query.filter(Event.date > datetime.now()).count()
+        past_events = Event.query.filter(Event.date <= datetime.now()).count()
+        
+        # Calculate user growth by month
+        user_growth = []
+        for i in range(6, -1, -1):
+            month_start = datetime.now().replace(day=1) - timedelta(days=30*i)
+            month_end = (month_start.replace(day=28) + timedelta(days=4)).replace(day=1)
+            
+            count = User.query.filter(
+                User.created_at >= month_start,
+                User.created_at < month_end
+            ).count()
+            
+            user_growth.append({
+                "month": month_start.strftime("%b"),
+                "users": count
+            })
+        
+        return jsonify({
+            "userStats": {
+                "totalUsers": total_users,
+                "activeUsers": active_users,
+                "premiumUsers": premium_users,
+                "conversionRate": (premium_users / total_users * 100) if total_users > 0 else 0
+            },
+            "eventStats": {
+                "totalEvents": total_events,
+                "upcomingEvents": upcoming_events,
+                "pastEvents": past_events
+            },
+            "userGrowth": user_growth,
+            "securityAlerts": 3  # Placeholder for security alerts count
+        }), 200
+    
+    except Exception as e:
+        print(f"Admin stats error: {str(e)}")
+        return jsonify({"error": "Failed to retrieve admin statistics", "details": str(e)}), 500
+
+@app.route('/api/admin/users', methods=['GET'])
+@jwt_required()
+def admin_get_users():
+    """
+    Get users with pagination and search for admin panel
+    
+    Query parameters:
+    - page: Page number for pagination
+    - limit: Number of users per page
+    - search: Search term for filtering
+    
+    Returns:
+    - List of users
+    - Pagination metadata
+    """
+    current_user_id = get_jwt_identity()
+    
+    # Check if user is an admin
+    user = User.query.get(current_user_id)
+    if not user or not getattr(user, 'is_admin', False):
+        return jsonify({"error": "Unauthorized access"}), 403
+    
+    try:
+        # Get pagination parameters
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 10))
+        search = request.args.get('search', '')
+        
+        # Base query
+        query = User.query
+        
+        # Apply search filter if provided
+        if search:
+            query = query.filter(
+                (User.name.ilike(f'%{search}%')) |
+                (User.email.ilike(f'%{search}%'))
+            )
+        
+        # Paginate results
+        users_page = query.paginate(page=page, per_page=limit, error_out=False)
+        
+        # Format user data
+        users_data = []
+        for user in users_page.items:
+            users_data.append({
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+                "hasCompletedPersonalityTest": user.has_completed_personality_test,
+                "personalityTags": user.personality_tags or [],
+                "tier": getattr(user, 'tier', 'free'),
+                "status": "active",  # Placeholder for user status
+                "country": getattr(user, 'country', 'Unknown')
+            })
+        
+        return jsonify({
+            "users": users_data,
+            "pagination": {
+                "page": page,
+                "limit": limit,
+                "total": users_page.total,
+                "pages": users_page.pages,
+                "hasNext": users_page.has_next,
+                "hasPrev": users_page.has_prev
+            }
+        }), 200
+    
+    except Exception as e:
+        print(f"Admin get users error: {str(e)}")
+        return jsonify({"error": "Failed to retrieve users", "details": str(e)}), 500
+
 # Main entry point
 if __name__ == '__main__':
     init_db()
-    app.run(debug=True)
+    # Run with Socket.IO
+    socketio.run(app, debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
