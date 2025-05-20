@@ -10,7 +10,7 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import timedelta, datetime
-from sqlalchemy import desc, and_, func
+from sqlalchemy import and_, func
 import os
 from flask_socketio import SocketIO, emit, join_room, leave_room
 import time
@@ -22,11 +22,8 @@ from models import User, Event, Attendance, Connection, Message, Feedback
 from ai import (
     analyze_personality, 
     calculate_match_score, 
-    recommend_events, 
     calculate_user_compatibility,
-    recommend_connections,
-    select_message_recipients,
-    process_event_feedback
+    select_message_recipients
 )
 
 # Create Flask application
