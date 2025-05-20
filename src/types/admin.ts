@@ -52,3 +52,17 @@ export interface AnalyticsData {
   demographicData: { age: string; users: number }[];
   usersByCountry: { country: string; users: number }[];
 }
+
+// Admin metrics types
+export interface AdminMetricsProps {
+  activeUsers: number;
+  totalEvents: number;
+  conversionRate: number;
+  securityAlertCount: number;
+  growthRate?: {
+    users: number;
+    events: number;
+    conversion: number;
+    security: number;
+  };
+}
