@@ -1101,6 +1101,26 @@ def admin_get_users():
         print(f"Admin get users error: {str(e)}")
         return jsonify({"error": "Failed to retrieve users", "details": str(e)}), 500
 
+# Debug/admin route: List all users (for development/testing)
+@app.route('/api/users', methods=['GET'])
+def list_users():
+    """
+    List all registered users.
+    Returns:
+    - List of user objects (id, name, email, hasCompletedPersonalityTest, personalityTags)
+    """
+    users = User.query.all()
+    users_data = []
+    for user in users:
+        users_data.append({
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "hasCompletedPersonalityTest": getattr(user, "has_completed_personality_test", False),
+            "personalityTags": getattr(user, "personality_tags", []),
+        })
+    return jsonify({"users": users_data}), 200
+
 # Main entry point
 if __name__ == '__main__':
     init_db()
