@@ -255,6 +255,7 @@ The application is fully responsive and works well on both iPhone and desktop de
 - **Push Notifications**: Add notification system for event reminders and messages
 - **Enhanced Analytics**: Expand analytics capabilities for event creators
 - **Recommendation Refinement**: Further train the personality matching algorithm with real user data
+- **Backend yet to be deployed**
 
 ## Contributing
 Contributions are welcome! Please feel free to submit a Pull Request.
