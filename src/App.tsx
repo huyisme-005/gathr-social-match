@@ -11,7 +11,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
 
 // Layouts
@@ -29,12 +29,41 @@ import CreateEvent from "./pages/CreateEvent";
 import UpcomingEvents from "./pages/UpcomingEvents";
 import Profile from "./pages/Profile";
 import GathrCircle from "./pages/GathrCircle";
+import Subscription from "./pages/Subscription";
+import AdminDashboard from "./pages/AdminDashboard";
 
 // Context
 import { AuthProvider } from "./contexts/AuthContext";
+import { useAuth } from "./contexts/AuthContext";
 
 // Create a client for React Query
 const queryClient = new QueryClient();
+
+// Protected route wrapper component
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated } = useAuth();
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
+// Admin route wrapper component
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, isAdmin } = useAuth();
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return <>{children}</>;
+};
 
 /**
  * App component - the main entry point of the application
@@ -55,17 +84,77 @@ const App = () => (
               <Route element={<AuthLayout />}>
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
-                <Route path="/personality-test" element={<PersonalityTest />} />
+                <Route 
+                  path="/personality-test" 
+                  element={
+                    <ProtectedRoute>
+                      <PersonalityTest />
+                    </ProtectedRoute>
+                  } 
+                />
               </Route>
               
               {/* Main App Routes - wrapped in MainLayout with bottom nav */}
               <Route element={<MainLayout />}>
-                <Route path="/find-events" element={<FindEvents />} />
-                <Route path="/create-event" element={<CreateEvent />} />
-                <Route path="/upcoming-events" element={<UpcomingEvents />} />
-                <Route path="/gathr-circle" element={<GathrCircle />} />
-                <Route path="/profile" element={<Profile />} />
+                <Route 
+                  path="/find-events" 
+                  element={
+                    <ProtectedRoute>
+                      <FindEvents />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/create-event" 
+                  element={
+                    <ProtectedRoute>
+                      <CreateEvent />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/upcoming-events" 
+                  element={
+                    <ProtectedRoute>
+                      <UpcomingEvents />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/gathr-circle" 
+                  element={
+                    <ProtectedRoute>
+                      <GathrCircle />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/profile" 
+                  element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/subscription" 
+                  element={
+                    <ProtectedRoute>
+                      <Subscription />
+                    </ProtectedRoute>
+                  } 
+                />
               </Route>
+              
+              {/* Admin Dashboard - only accessible to admin users */}
+              <Route 
+                path="/admin" 
+                element={
+                  <AdminRoute>
+                    <AdminDashboard />
+                  </AdminRoute>
+                } 
+              />
               
               {/* Catch all - 404 page */}
               <Route path="*" element={<NotFound />} />

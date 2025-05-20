@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { toast } from "@/components/ui/use-toast";
 
 // Sample personality test questions
 const questions = [
@@ -77,7 +78,7 @@ const PersonalityTest = () => {
   // Array to store selected personality traits
   const [selectedTraits, setSelectedTraits] = useState<string[]>([]);
   // Access auth context for completing the personality test
-  const { completePersonalityTest } = useAuth();
+  const { completePersonalityTest, user } = useAuth();
   // React Router navigation
   const navigate = useNavigate();
   
@@ -102,6 +103,12 @@ const PersonalityTest = () => {
   const handleNext = () => {
     if (currentQuestion < questions.length - 1 && answers[questions[currentQuestion].id]) {
       setCurrentQuestion(currentQuestion + 1);
+    } else if (!answers[questions[currentQuestion].id]) {
+      toast({
+        title: "Please select an option",
+        description: "You need to select an answer before proceeding.",
+        variant: "destructive"
+      });
     }
   };
   
@@ -120,12 +127,28 @@ const PersonalityTest = () => {
    * Calculates traits based on answers and navigates to events page
    */
   const handleSubmit = () => {
+    // Ensure current question is answered
+    if (!answers[questions[currentQuestion].id]) {
+      toast({
+        title: "Please select an option",
+        description: "You need to select an answer before completing the test.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     // Calculate personality traits based on answers
     const traits = Object.values(answers);
     setSelectedTraits(traits);
     
     // Complete the personality test in auth context
     completePersonalityTest(traits);
+    
+    // Show completion toast
+    toast({
+      title: "Personality test completed!",
+      description: "Your profile has been updated with your personality traits.",
+    });
     
     // Navigate to find events page
     navigate("/find-events");
@@ -140,10 +163,15 @@ const PersonalityTest = () => {
   // Check if current question has been answered (for Next button)
   const currentQuestionAnswered = answers[question.id] !== undefined;
   
+  // Determine if this is a retake 
+  const isRetake = user?.personalityTags && user.personalityTags.length > 0;
+  
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold text-center text-gathr-coral">Personality Test</CardTitle>
+        <CardTitle className="text-2xl font-bold text-center text-gathr-coral">
+          {isRetake ? "Retake Personality Test" : "Personality Test"}
+        </CardTitle>
         <CardDescription className="text-center">
           Help us understand your preferences to suggest events and connections that match your personality
         </CardDescription>
@@ -163,12 +191,20 @@ const PersonalityTest = () => {
             onValueChange={(value) => handleAnswer(question.id, value)}
           >
             {question.options.map((option) => (
-              <div key={option.id} className="flex items-center space-x-2">
+              <div key={option.id} className={`flex items-center space-x-2 p-3 rounded-md ${
+                answers[question.id] === option.trait ? "bg-gathr-coral/10 border border-gathr-coral" : "border border-transparent hover:bg-muted"
+              }`}>
                 <RadioGroupItem
                   value={option.trait}
                   id={`q${question.id}-${option.id}`}
+                  className={answers[question.id] === option.trait ? "text-gathr-coral" : ""}
                 />
-                <Label htmlFor={`q${question.id}-${option.id}`} className="flex-1 cursor-pointer py-2">
+                <Label 
+                  htmlFor={`q${question.id}-${option.id}`} 
+                  className={`flex-1 cursor-pointer ${
+                    answers[question.id] === option.trait ? "font-medium text-gathr-coral" : ""
+                  }`}
+                >
                   {option.text}
                 </Label>
               </div>
@@ -186,7 +222,7 @@ const PersonalityTest = () => {
           Previous
         </Button>
         
-        {currentQuestion === questions.length - 1 && currentQuestionAnswered ? (
+        {currentQuestion === questions.length - 1 ? (
           <Button 
             className="bg-gathr-coral hover:bg-gathr-coral/90" 
             onClick={handleSubmit}
@@ -197,7 +233,6 @@ const PersonalityTest = () => {
         ) : (
           <Button 
             onClick={handleNext}
-            disabled={!currentQuestionAnswered}
             className="bg-gathr-coral hover:bg-gathr-coral/90"
           >
             Next

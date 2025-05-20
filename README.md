@@ -11,18 +11,47 @@ https://gathr-social-match.lovable.app/
 
 ## Features
 
-- User authentication (login/registration)
+### Core Features
+- User authentication (email/password, social login, phone verification)
+- Persistent user accounts
 - Personality test for personalized recommendations
 - Event discovery with infinite scrolling
 - Event filtering and search
 - Event creation and management
 - Booking system for events
-- User profile management
+- User profile management with country selection
+- "Retake Personality Test" functionality
+
+### Social Features
 - Gathr Circle for managing connections
 - Event attendee viewing (24 hours before event)
-- Messaging system for attendees
+- Messaging system for attendees (up to 10% of attendees)
+- Voice and video calling with attendees
 - Post-event feedback collection
 - Personality-based matching algorithm
+
+### Premium Features
+- Subscription tiers (Free, Premium, Enterprise)
+- Enhanced visibility in event discovery
+- Access to exclusive events
+- Advanced matching algorithm
+- Increased messaging limits (up to 15% for Premium, unlimited for Enterprise)
+- Premium profile badge
+
+### Business Features
+- Event sponsorship opportunities based on expected participation
+- Corporate accounts for large teams
+- Interdepartmental connection targeting
+- Platform owner admin dashboard with:
+  - User analytics and demographics
+  - Security monitoring
+  - Platform configuration
+  - Mobile app distribution management
+
+## Mobile Application
+- iOS App Store and Google Play distribution
+- Native mobile experience
+- All features accessible on mobile
 
 ## Technologies Used
 
@@ -32,6 +61,7 @@ https://gathr-social-match.lovable.app/
 - Shadcn UI component library
 - React Router for navigation
 - React Query for data fetching
+- Recharts for analytics visualization
 
 ### Backend
 - Python Flask REST API
@@ -94,6 +124,42 @@ python run.py
 
 The backend API will be available at `http://localhost:5000`
 
+### Mobile App Testing
+
+For building and testing the mobile app:
+
+1. Install Capacitor
+```bash
+npm install @capacitor/core @capacitor/cli @capacitor/ios @capacitor/android
+```
+
+2. Initialize Capacitor
+```bash
+npx cap init
+```
+
+3. Build the web app
+```bash
+npm run build
+```
+
+4. Add iOS/Android platforms
+```bash
+npx cap add ios
+npx cap add android
+```
+
+5. Sync the web build with the native projects
+```bash
+npx cap sync
+```
+
+6. Open the native projects in their respective IDEs
+```bash
+npx cap open ios     # Requires macOS and Xcode
+npx cap open android # Requires Android Studio
+```
+
 ## Component Structure
 
 - `src/`
@@ -114,45 +180,46 @@ The backend API will be available at `http://localhost:5000`
 ## Key Components
 
 ### Authentication
-- `AuthContext.tsx` - Manages user authentication state
-- `Login.tsx` & `Register.tsx` - Authentication pages
-- `PersonalityTest.tsx` - User onboarding personality quiz
-- Backend JWT authentication with Flask-JWT-Extended
+- Multiple authentication methods (email, social media, phone)
+- Persistent user accounts
+- User profiles with country selection
+- Admin accounts for platform management
 
 ### Event Management
-- `FindEvents.tsx` - Main event discovery page
-- `CreateEvent.tsx` - Event creation form
-- `UpcomingEvents.tsx` - User's booked and created events
-- `EventDetailDialog.tsx` - Detailed event information
-- `EventFilterDialog.tsx` - Event filtering interface
-- RESTful API endpoints for event operations
+- Event discovery with matching algorithm
+- Event creation and booking
+- Upcoming events tracking
+- Event feedback system
 
-### User Profile & Social
-- `Profile.tsx` - User profile management
-- `GathrCircle.tsx` - User's connections and messaging
-- `FeedbackDialog.tsx` - Post-event feedback collection
-- Personality trait storage and analysis
+### Social Features
+- Attendee viewing with compatibility scores
+- Messaging system with recipient limits
+- Voice/video calling capability
+- Gathr Circle for managing connections
 
-### AI Components
-- Personality analysis algorithm
-- Event-user matching algorithm
-- Recommendation engine
+### Premium Features
+- Multi-tier subscription model
+- Enhanced features for paying users
+- Corporate account management
+- Sponsorship opportunities
 
-## Layouts
-- `MainLayout.tsx` - Layout for authenticated pages with bottom navigation
-- `AuthLayout.tsx` - Layout for authentication pages
+### Admin Dashboard
+- User analytics and demographics
+- Security monitoring
+- Platform configuration
+- Mobile app distribution
 
 ## User Flow
-1. User signs up or logs in
+1. User signs up or logs in (email, social media, or phone)
 2. New users complete a personality test
 3. Users are directed to the event discovery page
 4. Users can browse, search, and filter events
 5. Users can view event details and book events
 6. Users can see attendees 24 hours before the event
-7. Users can message up to 10% of attendees
+7. Users can message or call up to 10-15% of attendees (depending on tier)
 8. Users can add connections to their Gathr Circle
 9. After events, users can provide feedback
-10. The system uses feedback to improve recommendations
+10. Premium users get enhanced visibility and exclusive features
 
 ## Mobile & Desktop Compatibility
 The application is fully responsive and works well on both iPhone and desktop devices. It utilizes:
@@ -160,31 +227,34 @@ The application is fully responsive and works well on both iPhone and desktop de
 - Mobile-first approach
 - Bottom navigation for mobile
 - Adaptive layouts for different screen sizes
+- Native mobile apps for iOS and Android
 
 ## Current Implementation Status
 
 ✅ Frontend user interface  
 ✅ Responsive design for mobile and desktop  
-✅ User authentication (frontend interface and backend)  
+✅ User authentication (email, social, phone)  
 ✅ Personality test with trait analysis  
 ✅ Event discovery with infinite scrolling  
 ✅ Event detail view  
-✅ Backend API structure with Flask  
-✅ Database models for users, events, and attendance  
-✅ API endpoints for core functionality  
+✅ Retake personality test functionality  
 ✅ User connection management (Gathr Circle)  
-✅ Post-event feedback system  
-✅ Attendee viewing (24 hours before event)  
+✅ Voice and video calling capability  
+✅ Subscription tiers (Free, Premium, Enterprise)  
+✅ Admin dashboard for platform management  
+✅ Mobile app distribution setup  
+✅ Country selection for users  
+✅ Corporate account options  
+✅ Sponsorship opportunities  
 
 ## Limitations and Future Improvements
 
-- **Database Population**: Add sample data to demonstrate functionality
+- **Database Integration**: Connect to a real backend database
 - **Real-time Messaging**: Implement WebSockets for real-time chat
-- **Social Media Integration**: Add OAuth for social media login and personality analysis
-- **Advanced AI Models**: Further train the personality matching algorithm with real user data
+- **Payment Processing**: Integrate real payment system for subscriptions
 - **Push Notifications**: Add notification system for event reminders and messages
-- **Mobile Apps**: Develop native mobile applications for iOS and Android
-- **Payment Processing**: Integrate payment system for paid events
+- **Enhanced Analytics**: Expand analytics capabilities for event creators
+- **Recommendation Refinement**: Further train the personality matching algorithm with real user data
 
 ## Contributing
 Contributions are welcome! Please feel free to submit a Pull Request.

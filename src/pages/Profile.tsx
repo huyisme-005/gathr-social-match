@@ -8,6 +8,7 @@
  */
 import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,7 +20,8 @@ import { Pencil, Save, X } from "lucide-react";
 
 const Profile = () => {
   // Get user data from auth context
-  const { user } = useAuth();
+  const { user, completePersonalityTest } = useAuth();
+  const navigate = useNavigate();
   
   // State for edit mode
   const [isEditing, setIsEditing] = useState(false);
@@ -39,6 +41,22 @@ const Profile = () => {
     toast({
       title: "Profile updated",
       description: "Your profile has been updated successfully",
+    });
+  };
+  
+  /**
+   * Navigate to personality test page to retake the test
+   */
+  const handleRetakePersonalityTest = () => {
+    // Reset personality test state in auth context
+    completePersonalityTest([]);
+    
+    // Navigate to personality test page
+    navigate("/personality-test");
+    
+    toast({
+      title: "Retaking personality test",
+      description: "Your previous personality traits will be replaced with new results",
     });
   };
   
@@ -170,6 +188,7 @@ const Profile = () => {
           <Button 
             variant="outline" 
             className="w-full"
+            onClick={handleRetakePersonalityTest}
           >
             Retake Personality Test
           </Button>

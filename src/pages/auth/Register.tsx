@@ -6,12 +6,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "@/components/ui/use-toast";
+
+// List of countries for the dropdown
+const countries = [
+  "United States", "Canada", "United Kingdom", "Australia", 
+  "Germany", "France", "Japan", "China", "India", "Brazil",
+  "South Africa", "Nigeria", "Mexico", "Spain", "Italy",
+  "Netherlands", "Sweden", "Singapore", "New Zealand", "South Korea"
+];
 
 const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [country, setCountry] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -20,13 +31,17 @@ const Register = () => {
     e.preventDefault();
     
     if (password !== confirmPassword) {
-      alert("Passwords don't match!");
+      toast({
+        title: "Passwords don't match",
+        description: "Please make sure your passwords match",
+        variant: "destructive"
+      });
       return;
     }
     
     try {
       setIsLoading(true);
-      await register(name, email, password);
+      await register(name, email, password, country);
       navigate("/personality-test");
     } catch (error) {
       // Error is handled in the context with toast notification
@@ -66,6 +81,25 @@ const Register = () => {
               onChange={(e) => setEmail(e.target.value)}
               required
             />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="country">Country</Label>
+            <Select
+              value={country}
+              onValueChange={setCountry}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select your country" />
+              </SelectTrigger>
+              <SelectContent>
+                {countries.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
           <div className="space-y-2">
