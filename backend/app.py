@@ -118,6 +118,11 @@ def healthcheck():
     """Simple healthcheck endpoint to verify API is running"""
     return jsonify({"status": "ok", "message": "Gathr API is running"})
 
+# Add a default root route to avoid 404 on "/"
+@app.route('/', methods=['GET'])
+def index():
+    return jsonify({"status": "ok", "message": "Welcome to the Gathr API backend."})
+
 # Authentication routes
 @app.route('/api/register', methods=['POST'])
 def register():
