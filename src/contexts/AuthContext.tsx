@@ -1,4 +1,3 @@
-
 /**
  * AuthContext
  * 
@@ -110,6 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           tier: "free"
         };
         setUser(demoUser);
+        setIsAdmin(false);
         
         toast({
           title: "Login successful",
@@ -148,6 +148,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Clone the account without the password field for security
           const { password, ...userWithoutPassword } = foundAccount;
           setUser(userWithoutPassword);
+          setIsAdmin(!!userWithoutPassword.isAdmin);
           
           toast({
             title: "Login successful",
@@ -157,6 +158,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           throw new Error("Invalid credentials");
         }
       }
+      // After successful login, user state is set and isAuthenticated will be true
     } catch (error) {
       toast({
         title: "Login failed",
@@ -303,7 +305,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * Complete personality test function - updates user profile with personality tags
    * In a real app, this would save the results to a backend API
    */
-  const completePersonalityTest = (personalityTags: string[]) => {
+  const completePersonalityTest = (personalityTags: string[], onComplete?: () => void) => {
     if (user) {
       const updatedUser = {
         ...user,
@@ -311,11 +313,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         personalityTags,
       };
       setUser(updatedUser);
-      
       toast({
         title: "Personality test completed",
         description: "Your profile has been updated with your personality traits",
       });
+      // Optional callback to allow navigation after test completion
+      if (onComplete) onComplete();
     }
   };
   
