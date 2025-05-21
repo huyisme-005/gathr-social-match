@@ -1,3 +1,4 @@
+
 /**
  * AuthContext
  * 
@@ -9,14 +10,13 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "@/components/ui/use-toast";
 import gathrApi from "../api/gathrApi";
 
-
 // User type definition
 interface User {
   id: string;                          // Unique identifier for the user
   name: string;                        // User's display name
   email: string;                       // User's email address
-  hasCompletedPersonalityTest?: boolean; // Whether the user has completed the personality test
-  personalityTags?: string[];           // User's personality traits from the test
+  hasCompletedPersonalityTest: boolean; // Whether the user has completed the personality test
+  personalityTags: string[];           // User's personality traits from the test
   phoneNumber?: string;                // User's phone number (optional)
   country?: string;                    // User's selected country (optional)
   authProvider?: string;               // Authentication provider used (email, google, facebook, phone)
@@ -25,27 +25,20 @@ interface User {
   isAdmin?: boolean;                   // Whether this user is a platform admin
 }
 
-// User credentials for sign up and login
-interface UserCredentials {
-  name?: string; // Optional for login
-  email: string;
-  password: string;
-}
-
 // AuthContext type definition
 interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  hasCompletedPersonalityTest: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string, country?: string) => Promise<void>;
-  socialLogin: (provider: "google" | "facebook" | "twitter") => Promise<void>;
-  phoneLogin: (phoneNumber: string, verificationCode: string) => Promise<void>;
-  logout: () => void;
-  completePersonalityTest: (personalityTags: string[]) => void;
-  updateUserProfile: (data: Partial<User>) => Promise<void>;
-  upgradeTier: (tier: "premium" | "enterprise") => Promise<void>;
-  isAdmin: boolean;
+  user: User | null;                   // Current user data or null if not logged in
+  isAuthenticated: boolean;            // Whether the user is authenticated
+  hasCompletedPersonalityTest: boolean; // Whether the user has completed the personality test
+  login: (email: string, password: string) => Promise<void>; // Function to log in
+  register: (name: string, email: string, password: string, country?: string) => Promise<void>; // Function to register
+  socialLogin: (provider: "google" | "facebook" | "twitter") => Promise<void>; // Function for social login
+  phoneLogin: (phoneNumber: string, verificationCode: string) => Promise<void>; // Function for phone login
+  logout: () => void;                  // Function to log out
+  completePersonalityTest: (personalityTags: string[]) => void; // Function to save personality test results
+  updateUserProfile: (data: Partial<User>) => Promise<void>; // Function to update user profile
+  upgradeTier: (tier: "premium" | "enterprise") => Promise<void>; // Function to upgrade subscription tier
+  isAdmin: boolean;                    // Whether the current user is a platform admin
 }
 
 // Create the context
@@ -175,10 +168,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
   
   /**
+   * Register function - creates a new user account
+   * In a real app, this would call a backend API endpoint
+   */
+  const register = async (name: string, email: string, password: string, country?: string) => {
+    try {
+      // Check if account already exists
+      const storedAccounts = localStorage.getItem("gathr_accounts") || "[]";
+      const accounts = JSON.parse(storedAccounts);
+      
+      if (accounts.some((acc: any) => acc.email === email)) {
+        throw new Error("Email already registered");
+      }
+      
+      // Create new user
+      const newUser: User = {
+        id: Date.now().toString(),
+        name,
+        email,
+        hasCompletedPersonalityTest: false,
+        personalityTags: [],
+        country: country || "United States", // Default country if not specified
+        authProvider: "email",
+        tier: "free" // Default to free tier
+      };
+      
+      // Store in accounts list (with password) for future logins
+      const accountToStore = { ...newUser, password };
+      localStorage.setItem("gathr_accounts", JSON.stringify([...accounts, accountToStore]));
+      
+      // Set as current user (without password)
+      setUser(newUser);
+      
+      toast({
+        title: "Registration successful",
+        description: "Welcome to Gathr!",
+      });
+    } catch (error) {
+      toast({
+        title: "Registration failed",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+  
+  /**
    * Social login function - authenticates with social media providers
    * In a real app, this would use OAuth with the provider
    */
-  const socialLogin = async (provider: string) => {
+  const socialLogin = async (provider: "google" | "facebook" | "twitter") => {
     try {
       // Simulate social login
       const socialUser: User = {
@@ -211,7 +251,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * Phone login function - authenticates with phone number and verification code
    * In a real app, this would send a verification code via SMS
    */
-  const phoneLogin = async (phoneNumber: string, verificationCode?: string) => {
+  const phoneLogin = async (phoneNumber: string, verificationCode: string) => {
     try {
       // In a real app, verify the code with a backend service
       if (verificationCode !== "123456") {
@@ -317,47 +357,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Register function - creates a new user account
-  const register = async (name: string, email: string, password: string, country?: string) => {
-    try {
-      // Check if account already exists
-      const storedAccounts = localStorage.getItem("gathr_accounts") || "[]";
-      const accounts = JSON.parse(storedAccounts);
-      if (accounts.some((acc: any) => acc.email === email)) {
-        throw new Error("Email already registered");
-      }
-      // Create new user
-      const newUser: User = {
-        id: Date.now().toString(),
-        name,
-        email,
-        hasCompletedPersonalityTest: false,
-        personalityTags: [],
-        country: country || "United States",
-        authProvider: "email",
-        tier: "free"
-      };
-      // Store in accounts list (with password) for future logins
-      const accountToStore = { ...newUser, password };
-      localStorage.setItem("gathr_accounts", JSON.stringify([...accounts, accountToStore]));
-      // Set as current user (without password)
-      setUser(newUser);
-      toast({
-        title: "Registration successful",
-        description: "Welcome to Gathr!",
-      });
-    } catch (error) {
-      toast({
-        title: "Registration failed",
-        description: error instanceof Error ? error.message : "An error occurred",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
   // Create the context value object
-  const value: AuthContextType = {
+  const value = {
     user,
     isAuthenticated: !!user,
     hasCompletedPersonalityTest: user?.hasCompletedPersonalityTest || false,
@@ -372,10 +373,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAdmin
   };
 
+  // Show loading state while checking authentication
   if (isLoading) {
     return <div>Loading authentication...</div>;
   }
 
+  // Provide the auth context to the entire app
   return (
     <AuthContext.Provider value={value}>
       {children}

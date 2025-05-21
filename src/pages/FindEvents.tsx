@@ -16,15 +16,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "../contexts/AuthContext";
 import EventFilterDialog from "../components/EventFilterDialog";
-<<<<<<< HEAD
-<<<<<<< HEAD
-import EventDetailDialog from "../components/EventDetailDialog";
-=======
 import EventCard from "../components/EventCard";
->>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
-=======
-import EventCard from "../components/EventCard";
->>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
 import { mockEvents } from "../data/mockEvents";
 import { Event } from "../types/event";
 
@@ -43,7 +35,6 @@ const FindEvents = () => {
   // State for more events (national)
   const [nationalEvents, setNationalEvents] = useState<Event[]>([]);
   
->>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
   // Loading state for initial data fetching
   const [isLoading, setIsLoading] = useState(true);
   
@@ -219,17 +210,7 @@ const FindEvents = () => {
       setFilteredEvents(sortedEvents);
     }
   }, [user?.personalityTags, events]);
-  
-  /**
-<<<<<<< HEAD
-<<<<<<< HEAD
-   * Format the event date for display
-   */
-  const formatEventDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
-  
+
   /**
    * Format the event time for display
 =======
@@ -482,7 +463,6 @@ const FindEvents = () => {
 >>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
 =======
           </div>
->>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
           
           {/* Intersection observer target for infinite loading */}
           <div ref={ref} className="h-10" />
