@@ -1,14 +1,11 @@
+
 // User types
 export interface User {
-  id: number | string;
+  id: number;
   name: string;
   email: string;
   country: string;
   status: "active" | "premium" | "suspended";
-  tier?: string;
-  isCorporate?: boolean;
-  personalityTags?: string[];
-  hasCompletedPersonalityTest?: boolean;
 }
 
 export interface NewUser {

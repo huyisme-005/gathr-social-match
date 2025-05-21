@@ -1,3 +1,4 @@
+
 /**
  * AuthContext
  * 
@@ -29,7 +30,7 @@ interface AuthContextType {
   user: User | null;                   // Current user data or null if not logged in
   isAuthenticated: boolean;            // Whether the user is authenticated
   hasCompletedPersonalityTest: boolean; // Whether the user has completed the personality test
-  login: (email: string, password: string, onSuccess?: () => void, onRequirePersonalityTest?: () => void) => Promise<void>; // Function to log in
+  login: (email: string, password: string) => Promise<void>; // Function to log in
   register: (name: string, email: string, password: string, country?: string) => Promise<void>; // Function to register
   socialLogin: (provider: "google" | "facebook" | "twitter") => Promise<void>; // Function for social login
   phoneLogin: (phoneNumber: string, verificationCode: string) => Promise<void>; // Function for phone login
@@ -93,11 +94,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * Login function - authenticates user credentials
    * In a real app, this would call a backend API endpoint
    */
-  const login = async (email: string, password: string, onSuccess?: () => void, onRequirePersonalityTest?: () => void) => {
+  const login = async (email: string, password: string) => {
     try {
       // Simulating API call - in a real app, this would call the gathrApi.auth.login
       // Wait for backend to be implemented
-      let loggedInUser: User | null = null;
       if (email === "demo@gathr.com" && password === "password") {
         const demoUser: User = {
           id: "1",
@@ -110,8 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           tier: "free"
         };
         setUser(demoUser);
-        setIsAdmin(false);
-        loggedInUser = demoUser;
+        
         toast({
           title: "Login successful",
           description: "Welcome to Gathr!",
@@ -131,7 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
         setUser(adminUser);
         setIsAdmin(true);
-        loggedInUser = adminUser;
+        
         toast({
           title: "Admin login successful",
           description: "Welcome to the Gathr admin platform!",
@@ -149,22 +148,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Clone the account without the password field for security
           const { password, ...userWithoutPassword } = foundAccount;
           setUser(userWithoutPassword);
-          setIsAdmin(!!userWithoutPassword.isAdmin);
-          loggedInUser = userWithoutPassword;
+          
           toast({
             title: "Login successful",
             description: "Welcome back to Gathr!",
           });
         } else {
           throw new Error("Invalid credentials");
-        }
-      }
-      // After successful login, check if user has completed personality test
-      if (loggedInUser) {
-        if (loggedInUser.hasCompletedPersonalityTest) {
-          if (onSuccess) onSuccess();
-        } else {
-          if (onRequirePersonalityTest) onRequirePersonalityTest();
         }
       }
     } catch (error) {
@@ -313,7 +303,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * Complete personality test function - updates user profile with personality tags
    * In a real app, this would save the results to a backend API
    */
-  const completePersonalityTest = (personalityTags: string[], onComplete?: () => void) => {
+  const completePersonalityTest = (personalityTags: string[]) => {
     if (user) {
       const updatedUser = {
         ...user,
@@ -321,12 +311,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         personalityTags,
       };
       setUser(updatedUser);
+      
       toast({
         title: "Personality test completed",
         description: "Your profile has been updated with your personality traits",
       });
-      // Optional callback to allow navigation after test completion
-      if (onComplete) onComplete();
     }
   };
   
