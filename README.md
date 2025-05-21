@@ -80,6 +80,7 @@ Gathr is a social event platform that connects people through shared interests a
 - **Admin Navigation**: Use the "Back to App" button in the header to return to the main app from admin page.
 - **Event Booking**: Currently implemented as a client-side state only. In a production app, this would connect to an API.
 - **Payments**: Payment simulation is included, but it would require a real payment processor integration in production.
+- Users couldn't do the same thing for events on the 'More Events' section, something to be fixed later on.
 
 ## Theme Customization
 
