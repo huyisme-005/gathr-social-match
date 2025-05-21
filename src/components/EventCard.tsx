@@ -9,12 +9,13 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, MapPin, Users, X, Check } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, X, Check, DollarSign, Timer } from "lucide-react";
 import { format } from "date-fns";
 import { Event } from "../types/event";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import EventDetailDialog from "./EventDetailDialog";
 
 interface EventCardProps {
   event: Event;              // Event data to display
@@ -34,16 +35,15 @@ const EventCard = ({
   // State to track whether the user is attending the event
   const [isAttending, setIsAttending] = useState(isBooked || false);
   const [showDetail, setShowDetail] = useState(false);
+  const [bookingTime, setBookingTime] = useState<Date | null>(null);
   
   /**
    * Handles booking an event - in a real app, this would call an API
    */
   const handleAttend = () => {
     setIsAttending(true);
-    toast({
-      title: "Event booked",
-      description: `You are now attending ${event.title}`,
-    });
+    setBookingTime(new Date());
+    toast.success(`You are now attending ${event.title}`);
     setShowDetail(false);
   };
   
@@ -52,10 +52,15 @@ const EventCard = ({
    */
   const handleCancel = () => {
     setIsAttending(false);
-    toast({
-      title: "Booking canceled",
-      description: `You've canceled your attendance to ${event.title}`,
-    });
+    const currentTime = new Date();
+    const bookTime = bookingTime || new Date();
+    const hoursSinceBooked = (currentTime.getTime() - bookTime.getTime()) / (1000 * 60 * 60);
+    
+    if (hoursSinceBooked <= 24) {
+      toast.success(`Booking canceled with full refund for ${event.title}`);
+    } else {
+      toast.info(`Booking canceled for ${event.title} - no refund available after 24 hours`);
+    }
   };
 
   /**
@@ -84,6 +89,13 @@ const EventCard = ({
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
             </div>
             
+            {/* Price tag */}
+            <div className="absolute top-2 right-2">
+              <Badge className="bg-green-500 text-white">
+                ${event.price}
+              </Badge>
+            </div>
+            
             {/* Content overlay */}
             <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
               {/* Match score */}
@@ -99,90 +111,23 @@ const EventCard = ({
               {/* Event date */}
               <div className="flex items-center text-xs text-white/70 mt-1">
                 <Calendar className="h-3 w-3 mr-1" />
-                {formatEventDate(event.date)}
+                {format(new Date(event.date), "MMM d, yyyy")}
+              </div>
+              
+              {/* Event time */}
+              <div className="flex items-center text-xs text-white/70 mt-0.5">
+                <Clock className="h-3 w-3 mr-1" />
+                {event.startTime} - {event.endTime}
               </div>
             </div>
           </div>
         </Card>
         
-        {/* Event detail dialog */}
-        <Dialog open={showDetail} onOpenChange={setShowDetail}>
-          <DialogContent className="sm:max-w-md max-h-[90vh] overflow-auto p-0 gap-0 rounded-2xl">
-            <div className="relative">
-              {/* Header image */}
-              <div
-                className="h-64 w-full bg-center bg-cover"
-                style={{ backgroundImage: `url(${event.imageUrl})` }}
-              >
-                {/* Gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-transparent" />
-              </div>
-              
-              {/* Content */}
-              <div className="p-5 space-y-4">
-                <div>
-                  <h2 className="text-xl font-bold">{event.title}</h2>
-                  <div className="flex items-center text-sm text-muted-foreground mt-1">
-                    <Calendar className="h-4 w-4 mr-1" />
-                    <span>{format(new Date(event.date), "MMMM d, yyyy")}</span>
-                  </div>
-                </div>
-                
-                {/* Event details */}
-                <div className="space-y-4">
-                  {/* About */}
-                  <div>
-                    <h3 className="text-sm font-medium mb-1">About us</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {event.description}
-                    </p>
-                  </div>
-                  
-                  {/* Location */}
-                  <div>
-                    <h3 className="text-sm font-medium mb-1">Location</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {event.location}
-                    </p>
-                  </div>
-                  
-                  {/* Attendees */}
-                  <div className="flex items-center gap-1">
-                    {/* Avatar placeholders */}
-                    <div className="flex -space-x-2">
-                      {[1, 2, 3].map((i) => (
-                        <div 
-                          key={i}
-                          className="h-5 w-5 rounded-full bg-muted-foreground/30 border border-background"
-                        />
-                      ))}
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {event.attendees} participants
-                    </span>
-                  </div>
-                  
-                  {/* Book now or Cancel button */}
-                  {isAttending ? (
-                    <Button 
-                      className="w-full bg-red-500 hover:bg-red-600 text-white rounded-full"
-                      onClick={handleCancel}
-                    >
-                      Cancel Booking
-                    </Button>
-                  ) : (
-                    <Button 
-                      className="w-full bg-green-500 hover:bg-green-600 text-white rounded-full"
-                      onClick={handleAttend}
-                    >
-                      Book Now
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <EventDetailDialog 
+          event={event} 
+          open={showDetail} 
+          onOpenChange={setShowDetail} 
+        />
       </>
     );
   }
@@ -205,9 +150,14 @@ const EventCard = ({
               {format(new Date(event.date), "PPP")}
               <span className="mx-1">·</span>
               <Clock className="mr-1 h-3 w-3" />
-              {event.time}
+              {event.startTime} - {event.endTime}
             </CardDescription>
           </div>
+          
+          {/* Price tag */}
+          <Badge className="bg-green-500 text-white">
+            ${event.price}
+          </Badge>
           
           {/* Badge for events created by the user */}
           {isCreator && (
@@ -248,6 +198,12 @@ const EventCard = ({
               {category}
             </Badge>
           ))}
+        </div>
+        
+        {/* Refund policy notice */}
+        <div className="flex items-center text-xs text-muted-foreground">
+          <Timer className="mr-1 h-3 w-3" />
+          Full refund available if cancelled within 24 hours of booking
         </div>
       </CardContent>
       

@@ -25,6 +25,7 @@ export function ThemeToggle() {
 
   const colorOptions = [
     { name: "Black", value: "#000000" },
+    { name: "White", value: "#FFFFFF" },
     { name: "Dark Gray", value: "#121212" },
     { name: "Navy", value: "#0a192f" },
     { name: "Dark Purple", value: "#13111c" }
@@ -33,15 +34,15 @@ export function ThemeToggle() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="text-muted-foreground">
+        <Button variant="outline" size="sm" className="flex items-center gap-1">
           <Settings className="h-4 w-4" />
-          <span className="sr-only">Toggle theme</span>
+          <span>Background color</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <div className="p-2">
           <p className="text-xs font-medium mb-2">Background Color</p>
-          <div className="grid grid-cols-4 gap-1">
+          <div className="grid grid-cols-5 gap-1">
             {colorOptions.map((color) => (
               <button
                 key={color.value}
