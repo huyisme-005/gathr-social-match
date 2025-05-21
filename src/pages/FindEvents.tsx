@@ -16,7 +16,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "../contexts/AuthContext";
 import EventFilterDialog from "../components/EventFilterDialog";
+<<<<<<< HEAD
 import EventDetailDialog from "../components/EventDetailDialog";
+=======
+import EventCard from "../components/EventCard";
+>>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
 import { mockEvents } from "../data/mockEvents";
 import { Event } from "../types/event";
 
@@ -27,6 +31,15 @@ const FindEvents = () => {
   // State for filtered events (after search and filter applied)
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   
+<<<<<<< HEAD
+=======
+  // State for booked events
+  const [bookedEvents, setBookedEvents] = useState<Event[]>([]);
+  
+  // State for more events (national)
+  const [nationalEvents, setNationalEvents] = useState<Event[]>([]);
+  
+>>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
   // Loading state for initial data fetching
   const [isLoading, setIsLoading] = useState(true);
   
@@ -63,8 +76,40 @@ const FindEvents = () => {
   useEffect(() => {
     // Simulating API call delay
     setTimeout(() => {
+<<<<<<< HEAD
       setEvents(mockEvents);
       setFilteredEvents(mockEvents);
+=======
+      // Add price and time details to events
+      const enhancedEvents = mockEvents.map(event => ({
+        ...event,
+        price: Math.floor(Math.random() * 100) + 10, // Random price between $10-$110
+        startTime: `${event.time}`,
+        endTime: `${parseInt(event.time.split(':')[0]) + 2}:${event.time.split(':')[1]}`, // 2 hours after start
+        imageUrl: event.id === "1" ? "https://images.unsplash.com/photo-1581092160607-ee23481e1f5b" : event.imageUrl
+      }));
+      
+      setEvents(enhancedEvents);
+      setFilteredEvents(enhancedEvents);
+      
+      // Get some random events for the booked section
+      setBookedEvents(enhancedEvents.slice(0, 3));
+      
+      // Get some random events for the national section
+      // Adding more events to the national section
+      const moreNationalEvents = [
+        ...enhancedEvents.slice(3, 9),
+        ...enhancedEvents.map(evt => ({ 
+          ...evt, 
+          id: `${evt.id}-copy`, 
+          title: `${evt.title} ${Math.floor(Math.random() * 100)}`,
+          price: Math.floor(Math.random() * 100) + 10
+        })).slice(0, 6)
+      ];
+      
+      setNationalEvents(moreNationalEvents);
+      
+>>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
       setIsLoading(false);
     }, 1000);
   }, []);
@@ -172,6 +217,7 @@ const FindEvents = () => {
   }, [user?.personalityTags, events]);
   
   /**
+<<<<<<< HEAD
    * Format the event date for display
    */
   const formatEventDate = (dateString: string) => {
@@ -181,6 +227,9 @@ const FindEvents = () => {
   
   /**
    * Format the event time for display
+=======
+   * Toggle the expanded state of a section
+>>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
    */
   const formatEventTime = (timeString: string) => {
     return timeString.replace(/:00$/, '');
@@ -234,6 +283,7 @@ const FindEvents = () => {
                 className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
                 onClick={() => openEventDetail(event)}
               >
+<<<<<<< HEAD
                 <CardContent className="p-0">
                   <div className="flex">
                     {/* Event image */}
@@ -244,6 +294,120 @@ const FindEvents = () => {
                         className="w-full h-full object-cover" 
                       />
                     </div>
+=======
+                {expandedSections.yourTickets ? 'Collapse' : 'View all'}
+              </Button>
+            </div>
+            
+            {bookedEvents.length > 0 ? (
+              <Carousel className="w-full">
+                <CarouselContent className="-ml-2 md:-ml-4">
+                  {bookedEvents.map((event) => (
+                    <CarouselItem 
+                      key={event.id} 
+                      className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+                      style={{ minWidth: expandedSections.yourTickets ? "auto" : "160px", width: expandedSections.yourTickets ? "100%" : "160px" }}
+                    >
+                      <EventCard 
+                        event={event} 
+                        view="grid"
+                        isBooked={true}
+                      />
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-0 bg-gray-100" />
+                <CarouselNext className="right-0 bg-gray-100" />
+              </Carousel>
+            ) : (
+              <div className="text-center py-4 bg-secondary/30 rounded-xl">
+                <p className="text-muted-foreground">No booked events yet</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Book events to see them appear here
+                </p>
+              </div>
+            )}
+          </div>
+          
+          {/* Section: Explore Nearby */}
+          <div className="mt-6">
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="font-medium">Explore Nearby</h2>
+              <Button 
+                variant="link" 
+                className="text-xs text-green-500 p-0"
+                onClick={() => toggleSectionExpanded('exploreNearby')}
+              >
+                {expandedSections.exploreNearby ? 'Collapse' : 'View all'}
+              </Button>
+            </div>
+            
+            {filteredEvents.length > 0 ? (
+              <Carousel className="w-full">
+                <CarouselContent className="-ml-2 md:-ml-4">
+                  {filteredEvents.slice(0, expandedSections.exploreNearby ? filteredEvents.length : 4).map((event) => (
+                    <CarouselItem 
+                      key={event.id} 
+                      className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+                      style={{ minWidth: expandedSections.exploreNearby ? "auto" : "180px", width: expandedSections.exploreNearby ? "100%" : "180px" }}
+                    >
+                      <EventCard 
+                        key={event.id} 
+                        event={event}
+                        view="grid"
+                      />
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-0 bg-gray-100" />
+                <CarouselNext className="right-0 bg-gray-100" />
+              </Carousel>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No events found matching your criteria</p>
+                <Button 
+                  variant="link" 
+                  onClick={() => {
+                    setSearchTerm("");
+                    setActiveFilters({ categories: [], date: null, distance: 10 });
+                    setFilteredEvents(events);
+                  }}
+                >
+                  Clear filters
+                </Button>
+              </div>
+            )}
+          </div>
+          
+          {/* Section: More Events */}
+          <div className="mt-6">
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="font-medium">More Events</h2>
+              <Button 
+                variant="link" 
+                className="text-xs text-green-500 p-0"
+                onClick={() => toggleSectionExpanded('moreEvents')}
+              >
+                {expandedSections.moreEvents ? 'Collapse' : 'View all'}
+              </Button>
+            </div>
+            
+            <div className="space-y-4">
+              {nationalEvents.slice(0, expandedSections.moreEvents ? nationalEvents.length : 3).map((event) => (
+                <Card 
+                  key={event.id}
+                  className="overflow-hidden rounded-2xl cursor-pointer hover:shadow-lg transition-all"
+                  onClick={() => {
+                    // Handle click for rectangle event cards
+                  }}
+                >
+                  <div className="flex h-24">
+                    {/* Event image */}
+                    <div 
+                      className="w-1/3 bg-cover bg-center"
+                      style={{ backgroundImage: `url(${event.imageUrl || '/placeholder.svg'})` }}
+                    />
+>>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
                     
                     {/* Event details */}
                     <div className="w-2/3 p-3 space-y-2">
@@ -255,11 +419,24 @@ const FindEvents = () => {
                         </Badge>
                       </div>
                       
+<<<<<<< HEAD
                       {/* Date, time, location */}
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <Calendar className="h-3 w-3" />
                           <span>{formatEventDate(event.date)} • {formatEventTime(event.time)}</span>
+=======
+                      <div className="flex items-center justify-between">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center text-xs text-muted-foreground">
+                            <Calendar className="h-3 w-3 mr-1" />
+                            {format(new Date(event.date), "MMM d, yyyy")}
+                          </div>
+                          <div className="flex items-center text-xs text-muted-foreground">
+                            <Clock className="h-3 w-3 mr-1" />
+                            {event.startTime} - {event.endTime}
+                          </div>
+>>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
                         </div>
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <MapPin className="h-3 w-3" />
@@ -290,7 +467,11 @@ const FindEvents = () => {
                 Clear filters
               </Button>
             </div>
+<<<<<<< HEAD
           )}
+=======
+          </div>
+>>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
           
           {/* Intersection observer target for infinite loading */}
           <div ref={ref} className="h-10" />

@@ -209,6 +209,7 @@ npx cap open android # Requires Android Studio
 - Platform configuration
 - Mobile app distribution
 
+<<<<<<< HEAD
 ## User Flow
 1. User signs up or logs in (email, social media, or phone)
 2. New users complete a personality test
@@ -259,3 +260,16 @@ The application is fully responsive and works well on both iPhone and desktop de
 
 ## Contributing
 Contributions are welcome! Please feel free to submit a Pull Request.
+=======
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/my-feature`)
+3. Commit your changes (`git commit -m 'Add my feature'`)
+4. Push to the branch (`git push origin feature/my-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+>>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
