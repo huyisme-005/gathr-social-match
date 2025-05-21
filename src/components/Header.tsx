@@ -93,9 +93,9 @@ const Header = () => {
               </DropdownMenuItem>
               
               {isAdmin && (
-                <DropdownMenuItem onClick={() => navigate("/admin")}>
+                <DropdownMenuItem onClick={toggleAdminView}>
                   <Shield className="mr-2 h-4 w-4" />
-                  <span>Admin Dashboard</span>
+                  <span>{isAdminPage ? "Back to App" : "Admin Dashboard"}</span>
                 </DropdownMenuItem>
               )}
               
