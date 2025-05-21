@@ -162,13 +162,22 @@ const EventCard = ({
                     </span>
                   </div>
                   
-                  {/* Book now button */}
-                  <Button 
-                    className="w-full bg-gathr-coral hover:bg-gathr-coral/90 rounded-full"
-                    onClick={handleAttend}
-                  >
-                    Book Now
-                  </Button>
+                  {/* Book now or Cancel button */}
+                  {isAttending ? (
+                    <Button 
+                      className="w-full bg-red-500 hover:bg-red-600 text-white rounded-full"
+                      onClick={handleCancel}
+                    >
+                      Cancel Booking
+                    </Button>
+                  ) : (
+                    <Button 
+                      className="w-full bg-green-500 hover:bg-green-600 text-white rounded-full"
+                      onClick={handleAttend}
+                    >
+                      Book Now
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -255,8 +264,7 @@ const EventCard = ({
           </Button>
         ) : isAttending ? (
           <Button 
-            variant="outline" 
-            className="text-red-500 hover:text-red-600"
+            className="bg-red-500 hover:bg-red-600 text-white"
             onClick={handleCancel}
           >
             <X className="mr-1 h-4 w-4" />
@@ -264,7 +272,7 @@ const EventCard = ({
           </Button>
         ) : (
           <Button 
-            className="bg-gathr-coral hover:bg-gathr-coral/90"
+            className="bg-green-500 hover:bg-green-600 text-white"
             onClick={handleAttend}
           >
             <Check className="mr-1 h-4 w-4" />

@@ -62,6 +62,12 @@ const EventDetailDialog = ({ event, open, onOpenChange }: EventDetailDialogProps
     toast.success("Event booked successfully!");
   };
 
+  // Handle canceling a booking
+  const handleCancelBooking = () => {
+    setIsBooked(false);
+    toast.success("Booking canceled successfully!");
+  };
+
   // Handle messaging attendees
   const handleMessageAttendees = () => {
     toast.success("Message sent to selected attendees");
@@ -191,18 +197,17 @@ const EventDetailDialog = ({ event, open, onOpenChange }: EventDetailDialogProps
           {/* Book event button */}
           {!isBooked ? (
             <Button 
-              className="w-full bg-gathr-coral hover:bg-gathr-coral/90"
+              className="w-full bg-green-500 hover:bg-green-600 text-white"
               onClick={handleBookEvent}
             >
               Book Now
             </Button>
           ) : (
             <Button 
-              variant="outline" 
-              className="w-full"
-              disabled
+              className="w-full bg-red-500 hover:bg-red-600 text-white"
+              onClick={handleCancelBooking}
             >
-              Booked
+              Cancel Booking
             </Button>
           )}
         </div>
