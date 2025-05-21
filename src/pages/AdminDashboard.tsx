@@ -10,8 +10,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/use-toast";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft } from "lucide-react";
 
 // Import admin components
 import AdminMetrics from "@/components/admin/AdminMetrics";
@@ -248,18 +246,7 @@ const AdminDashboard = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigate("/find-events")} 
-            className="flex items-center gap-1"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            <span>Back to App</span>
-          </Button>
-          <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-        </div>
+        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
         <p className="text-muted-foreground">Welcome, {user.name}</p>
       </div>
       

@@ -45,19 +45,29 @@ const Header = () => {
   return (
     <header className="border-b bg-background">
       <div className="container mx-auto flex items-center justify-between p-4">
-        <div className="flex items-center gap-2">
-          {isAdminPage && (
+        <div className="flex items-center">
+          <GathrLogo />
+          
+          {isAdmin && (
             <Button 
               variant="ghost" 
               size="sm"
-              onClick={() => navigate("/find-events")}
-              className="flex items-center gap-1"
+              onClick={toggleAdminView}
+              className="ml-4 flex items-center gap-2"
             >
-              <ChevronLeft className="h-4 w-4" />
-              <span>Back to App</span>
+              {isAdminPage ? (
+                <>
+                  <ChevronLeft className="h-4 w-4" />
+                  <span>Return to App</span>
+                </>
+              ) : (
+                <>
+                  <Shield className="h-4 w-4" />
+                  <span>Admin Dashboard</span>
+                </>
+              )}
             </Button>
           )}
-          <GathrLogo />
         </div>
         
         {user && (
@@ -93,9 +103,9 @@ const Header = () => {
               </DropdownMenuItem>
               
               {isAdmin && (
-                <DropdownMenuItem onClick={toggleAdminView}>
+                <DropdownMenuItem onClick={() => navigate("/admin")}>
                   <Shield className="mr-2 h-4 w-4" />
-                  <span>{isAdminPage ? "Back to App" : "Admin Dashboard"}</span>
+                  <span>Admin Dashboard</span>
                 </DropdownMenuItem>
               )}
               
