@@ -19,6 +19,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "../contexts/AuthContext";
 import EventFilterDialog from "../components/EventFilterDialog";
 import EventCard from "../components/EventCard";
+import EventDetailDialog from "../components/EventDetailDialog";
 import { mockEvents } from "../data/mockEvents";
 import { Event } from "../types/event";
 import { ThemeToggle } from "../components/ThemeToggle";
@@ -42,6 +43,10 @@ const FindEvents = () => {
   
   // State for more events (national)
   const [nationalEvents, setNationalEvents] = useState<Event[]>([]);
+
+  // State for selected event detail
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [showDetail, setShowDetail] = useState(false);
   
   // Loading state for initial data fetching
   const [isLoading, setIsLoading] = useState(true);
@@ -83,6 +88,18 @@ const FindEvents = () => {
    * In a real app, this would fetch events from an API
    */
   useEffect(() => {
+    // Check if there are any booked events in localStorage
+    const storedBookedEvents = localStorage.getItem('bookedEvents');
+    let parsedBookedEvents: Event[] = [];
+    
+    if (storedBookedEvents) {
+      try {
+        parsedBookedEvents = JSON.parse(storedBookedEvents);
+      } catch (e) {
+        console.error('Error parsing booked events', e);
+      }
+    }
+    
     // Simulating API call delay
     setTimeout(() => {
       // Add price and time details to events
@@ -97,8 +114,8 @@ const FindEvents = () => {
       setEvents(enhancedEvents);
       setFilteredEvents(enhancedEvents);
       
-      // Get some random events for the booked section
-      setBookedEvents(enhancedEvents.slice(0, 3));
+      // Use stored booked events if available, otherwise use mock data
+      setBookedEvents(parsedBookedEvents.length > 0 ? parsedBookedEvents : enhancedEvents.slice(0, 3));
       
       // Get some random events for the national section
       // Adding more events to the national section
@@ -117,6 +134,13 @@ const FindEvents = () => {
       setIsLoading(false);
     }, 1000);
   }, []);
+  
+  // Save booked events to localStorage when they change
+  useEffect(() => {
+    if (bookedEvents.length > 0) {
+      localStorage.setItem('bookedEvents', JSON.stringify(bookedEvents));
+    }
+  }, [bookedEvents]);
   
   /**
    * Handle infinite scrolling when user reaches bottom of the list
@@ -211,6 +235,15 @@ const FindEvents = () => {
       setFilteredEvents(sortedEvents);
     }
   }, [user?.personalityTags, events]);
+
+  /**
+   * Handle booking an event
+   */
+  const handleBookEvent = (event: Event) => {
+    if (!bookedEvents.some(e => e.id === event.id)) {
+      setBookedEvents(prev => [...prev, event]);
+    }
+  };
 
   /**
    * Toggle the expanded state of a section
@@ -371,14 +404,15 @@ const FindEvents = () => {
                   key={event.id}
                   className="overflow-hidden rounded-2xl cursor-pointer hover:shadow-lg transition-all"
                   onClick={() => {
-                    // Handle click for rectangle event cards
+                    setSelectedEvent(event);
+                    setShowDetail(true);
                   }}
                 >
                   <div className="flex h-24">
                     {/* Event image */}
                     <div 
                       className="w-1/3 bg-cover bg-center"
-                      style={{ backgroundImage: `url(${event.imageUrl || '/placeholder.svg'})` }}
+                      style={{ backgroundImage: `url(${event.imageUrl || 'https://images.unsplash.com/photo-1581092160607-ee23481e1f5b'})` }}
                     />
                     
                     {/* Event details */}
@@ -395,6 +429,10 @@ const FindEvents = () => {
                           <div className="flex items-center text-xs text-muted-foreground">
                             <Calendar className="h-3 w-3 mr-1" />
                             {format(new Date(event.date), "MMM d, yyyy")}
+                          </div>
+                          <div className="flex items-center text-xs text-muted-foreground">
+                            <MapPin className="h-3 w-3 mr-1" />
+                            {event.location.slice(0, 15) + (event.location.length > 15 ? '...' : '')}
                           </div>
                           <div className="flex items-center text-xs text-muted-foreground">
                             <Clock className="h-3 w-3 mr-1" />
@@ -417,6 +455,15 @@ const FindEvents = () => {
               ))}
             </div>
           </div>
+          
+          {/* Event detail dialog for More Events section */}
+          {selectedEvent && (
+            <EventDetailDialog 
+              event={selectedEvent} 
+              open={showDetail} 
+              onOpenChange={setShowDetail} 
+            />
+          )}
           
           {/* Intersection observer target for infinite loading */}
           <div ref={ref} className="h-10" />
