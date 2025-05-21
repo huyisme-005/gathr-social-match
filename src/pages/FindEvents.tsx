@@ -10,15 +10,14 @@ import { useState, useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, MapPin, Calendar } from "lucide-react";
+import { Search, Filter, Settings } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useAuth } from "../contexts/AuthContext";
 import EventFilterDialog from "../components/EventFilterDialog";
-import EventDetailDialog from "../components/EventDetailDialog";
+import EventCard from "../components/EventCard";
 import { mockEvents } from "../data/mockEvents";
 import { Event } from "../types/event";
+import { ThemeToggle } from "../components/ThemeToggle";
 
 const FindEvents = () => {
   // State for all events data
@@ -39,16 +38,15 @@ const FindEvents = () => {
   // State to control filter dialog visibility
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   
-  // State to control event detail dialog
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
-  
   // State for active filters
   const [activeFilters, setActiveFilters] = useState({
     categories: [] as string[],  // Selected event categories
     date: null as Date | null,   // Selected date filter
     distance: 10,                // Selected distance radius in km
   });
+  
+  // State for view mode
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   
   // Get current user data from auth context
   const { user } = useAuth();
@@ -144,14 +142,6 @@ const FindEvents = () => {
   };
 
   /**
-   * Open the event detail dialog
-   */
-  const openEventDetail = (event: Event) => {
-    setSelectedEvent(event);
-    setIsDetailOpen(true);
-  };
-  
-  /**
    * Sort events based on user's personality traits
    * This increases match scores for events with categories matching user's traits
    */
@@ -171,25 +161,11 @@ const FindEvents = () => {
     }
   }, [user?.personalityTags, events]);
   
-  /**
-   * Format the event date for display
-   */
-  const formatEventDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
-  
-  /**
-   * Format the event time for display
-   */
-  const formatEventTime = (timeString: string) => {
-    return timeString.replace(/:00$/, '');
-  };
-  
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Find Events</h1>
+        <h1 className="text-xl font-medium">Explore Events</h1>
+        <ThemeToggle />
       </div>
       
       {/* Search and filter controls */}
@@ -198,7 +174,7 @@ const FindEvents = () => {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search events..."
-            className="pl-8"
+            className="pl-8 bg-secondary border-0"
             value={searchTerm}
             onChange={(e) => handleSearch(e.target.value)}
           />
@@ -207,7 +183,7 @@ const FindEvents = () => {
           variant="outline" 
           size="icon"
           onClick={() => setIsFilterOpen(true)}
-          className={activeFilters.categories.length ? "bg-gathr-coral text-white hover:bg-gathr-coral/90" : ""}
+          className={`bg-secondary border-0 ${activeFilters.categories.length ? "text-gathr-coral" : ""}`}
         >
           <Filter className="h-4 w-4" />
         </Button>
@@ -215,86 +191,70 @@ const FindEvents = () => {
       
       {/* Loading state */}
       {isLoading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="space-y-2">
-              <Skeleton className="h-[120px] w-full rounded-lg" />
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-            </div>
+        <div className="event-grid">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-44 w-full rounded-2xl" />
           ))}
         </div>
       ) : (
-        <div className="space-y-3">
-          {/* Event list or empty state */}
-          {filteredEvents.length > 0 ? (
-            filteredEvents.map((event) => (
-              <Card 
-                key={event.id} 
-                className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => openEventDetail(event)}
-              >
-                <CardContent className="p-0">
-                  <div className="flex">
-                    {/* Event image */}
-                    <div className="w-1/3 h-[120px]">
-                      <img 
-                        src={event.imageUrl} 
-                        alt={event.title} 
-                        className="w-full h-full object-cover" 
-                      />
-                    </div>
-                    
-                    {/* Event details */}
-                    <div className="w-2/3 p-3 space-y-2">
-                      {/* Title and match score */}
-                      <div className="flex justify-between">
-                        <h3 className="font-medium line-clamp-1">{event.title}</h3>
-                        <Badge className="bg-gathr-coral shrink-0">
-                          {event.matchScore}%
-                        </Badge>
-                      </div>
-                      
-                      {/* Date, time, location */}
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Calendar className="h-3 w-3" />
-                          <span>{formatEventDate(event.date)} • {formatEventTime(event.time)}</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <MapPin className="h-3 w-3" />
-                          <span className="line-clamp-1">{event.location}</span>
-                        </div>
-                      </div>
-                      
-                      {/* Description truncated */}
-                      <p className="text-xs text-muted-foreground line-clamp-1">
-                        {event.description}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">No events found matching your criteria</p>
-              <Button 
-                variant="link" 
-                onClick={() => {
-                  setSearchTerm("");
-                  setActiveFilters({ categories: [], date: null, distance: 10 });
-                  setFilteredEvents(events);
-                }}
-              >
-                Clear filters
-              </Button>
+        <>
+          {/* Section: Your Ticket Events */}
+          <div className="mt-6">
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="font-medium">Your Ticket Events</h2>
+              <Button variant="link" className="text-xs text-gathr-coral p-0">View all</Button>
             </div>
-          )}
+            
+            <div className="flex overflow-x-auto gap-3 pb-2 scrollbar-hide">
+              {filteredEvents.slice(0, 3).map((event) => (
+                <div key={event.id} className="min-w-[160px] w-[160px]">
+                  <EventCard 
+                    event={event} 
+                    view="grid"
+                    isBooked={true}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Section: Explore Nearby */}
+          <div className="mt-6">
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="font-medium">Explore Nearby</h2>
+              <Button variant="link" className="text-xs text-gathr-coral p-0">View all</Button>
+            </div>
+            
+            {filteredEvents.length > 0 ? (
+              <div className="event-grid">
+                {filteredEvents.map((event) => (
+                  <EventCard 
+                    key={event.id} 
+                    event={event}
+                    view="grid"
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No events found matching your criteria</p>
+                <Button 
+                  variant="link" 
+                  onClick={() => {
+                    setSearchTerm("");
+                    setActiveFilters({ categories: [], date: null, distance: 10 });
+                    setFilteredEvents(events);
+                  }}
+                >
+                  Clear filters
+                </Button>
+              </div>
+            )}
+          </div>
           
           {/* Intersection observer target for infinite loading */}
           <div ref={ref} className="h-10" />
-        </div>
+        </>
       )}
       
       {/* Filter dialog */}
@@ -304,15 +264,6 @@ const FindEvents = () => {
         filters={activeFilters}
         onApplyFilters={applyFilters}
       />
-      
-      {/* Event detail dialog */}
-      {selectedEvent && (
-        <EventDetailDialog
-          event={selectedEvent}
-          open={isDetailOpen}
-          onOpenChange={setIsDetailOpen}
-        />
-      )}
     </div>
   );
 };
