@@ -6,19 +6,30 @@
  * It displays a list of events with infinite scrolling, search functionality,
  * and filtering options. Events are recommended based on the user's personality.
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useInView } from "react-intersection-observer";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, MapPin, Calendar } from "lucide-react";
+import { Search, Filter, Calendar, MapPin, Clock, ChevronRight, ChevronLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "../contexts/AuthContext";
 import EventFilterDialog from "../components/EventFilterDialog";
 import EventCard from "../components/EventCard";
+import EventDetailDialog from "../components/EventDetailDialog";
 import { mockEvents } from "../data/mockEvents";
 import { Event } from "../types/event";
+import { ThemeToggle } from "../components/ThemeToggle";
+import { 
+  Carousel, 
+  CarouselContent, 
+  CarouselItem, 
+  CarouselNext, 
+  CarouselPrevious 
+} from "@/components/ui/carousel";
 
 const FindEvents = () => {
   // State for all events data
@@ -27,13 +38,15 @@ const FindEvents = () => {
   // State for filtered events (after search and filter applied)
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   
-<<<<<<< HEAD
-=======
   // State for booked events
   const [bookedEvents, setBookedEvents] = useState<Event[]>([]);
   
   // State for more events (national)
   const [nationalEvents, setNationalEvents] = useState<Event[]>([]);
+
+  // State for selected event detail
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [showDetail, setShowDetail] = useState(false);
   
   // Loading state for initial data fetching
   const [isLoading, setIsLoading] = useState(true);
@@ -47,9 +60,12 @@ const FindEvents = () => {
   // State to control filter dialog visibility
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   
-  // State to control event detail dialog
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  // State for expanded sections
+  const [expandedSections, setExpandedSections] = useState({
+    yourTickets: false,
+    exploreNearby: false,
+    moreEvents: false
+  });
   
   // State for active filters
   const [activeFilters, setActiveFilters] = useState({
@@ -57,6 +73,9 @@ const FindEvents = () => {
     date: null as Date | null,   // Selected date filter
     distance: 10,                // Selected distance radius in km
   });
+  
+  // State for view mode
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   
   // Get current user data from auth context
   const { user } = useAuth();
@@ -69,12 +88,20 @@ const FindEvents = () => {
    * In a real app, this would fetch events from an API
    */
   useEffect(() => {
+    // Check if there are any booked events in localStorage
+    const storedBookedEvents = localStorage.getItem('bookedEvents');
+    let parsedBookedEvents: Event[] = [];
+    
+    if (storedBookedEvents) {
+      try {
+        parsedBookedEvents = JSON.parse(storedBookedEvents);
+      } catch (e) {
+        console.error('Error parsing booked events', e);
+      }
+    }
+    
     // Simulating API call delay
     setTimeout(() => {
-<<<<<<< HEAD
-      setEvents(mockEvents);
-      setFilteredEvents(mockEvents);
-=======
       // Add price and time details to events
       const enhancedEvents = mockEvents.map(event => ({
         ...event,
@@ -87,8 +114,8 @@ const FindEvents = () => {
       setEvents(enhancedEvents);
       setFilteredEvents(enhancedEvents);
       
-      // Get some random events for the booked section
-      setBookedEvents(enhancedEvents.slice(0, 3));
+      // Use stored booked events if available, otherwise use mock data
+      setBookedEvents(parsedBookedEvents.length > 0 ? parsedBookedEvents : enhancedEvents.slice(0, 3));
       
       // Get some random events for the national section
       // Adding more events to the national section
@@ -104,10 +131,16 @@ const FindEvents = () => {
       
       setNationalEvents(moreNationalEvents);
       
->>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
       setIsLoading(false);
     }, 1000);
   }, []);
+  
+  // Save booked events to localStorage when they change
+  useEffect(() => {
+    if (bookedEvents.length > 0) {
+      localStorage.setItem('bookedEvents', JSON.stringify(bookedEvents));
+    }
+  }, [bookedEvents]);
   
   /**
    * Handle infinite scrolling when user reaches bottom of the list
@@ -184,14 +217,6 @@ const FindEvents = () => {
   };
 
   /**
-   * Open the event detail dialog
-   */
-  const openEventDetail = (event: Event) => {
-    setSelectedEvent(event);
-    setIsDetailOpen(true);
-  };
-  
-  /**
    * Sort events based on user's personality traits
    * This increases match scores for events with categories matching user's traits
    */
@@ -212,21 +237,29 @@ const FindEvents = () => {
   }, [user?.personalityTags, events]);
 
   /**
-   * Format the event time for display
-=======
-=======
->>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
-   * Toggle the expanded state of a section
->>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
+   * Handle booking an event
    */
-  const formatEventTime = (timeString: string) => {
-    return timeString.replace(/:00$/, '');
+  const handleBookEvent = (event: Event) => {
+    if (!bookedEvents.some(e => e.id === event.id)) {
+      setBookedEvents(prev => [...prev, event]);
+    }
+  };
+
+  /**
+   * Toggle the expanded state of a section
+   */
+  const toggleSectionExpanded = (section: 'yourTickets' | 'exploreNearby' | 'moreEvents') => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
   };
   
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Find Events</h1>
+        <h1 className="text-xl font-medium">Explore Events</h1>
+        <ThemeToggle />
       </div>
       
       {/* Search and filter controls */}
@@ -235,7 +268,7 @@ const FindEvents = () => {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search events..."
-            className="pl-8"
+            className="pl-8 bg-secondary border-0"
             value={searchTerm}
             onChange={(e) => handleSearch(e.target.value)}
           />
@@ -244,7 +277,7 @@ const FindEvents = () => {
           variant="outline" 
           size="icon"
           onClick={() => setIsFilterOpen(true)}
-          className={activeFilters.categories.length ? "bg-gathr-coral text-white hover:bg-gathr-coral/90" : ""}
+          className={`bg-secondary border-0 ${activeFilters.categories.length ? "text-gathr-coral" : ""}`}
         >
           <Filter className="h-4 w-4" />
         </Button>
@@ -252,37 +285,22 @@ const FindEvents = () => {
       
       {/* Loading state */}
       {isLoading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="space-y-2">
-              <Skeleton className="h-[120px] w-full rounded-lg" />
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-            </div>
+        <div className="event-grid">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-44 w-full rounded-2xl" />
           ))}
         </div>
       ) : (
-        <div className="space-y-3">
-          {/* Event list or empty state */}
-          {filteredEvents.length > 0 ? (
-            filteredEvents.map((event) => (
-              <Card 
-                key={event.id} 
-                className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => openEventDetail(event)}
+        <>
+          {/* Section: Your Ticket Events */}
+          <div className="mt-6">
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="font-medium">Your Ticket Events</h2>
+              <Button 
+                variant="link" 
+                className="text-xs text-green-500 p-0"
+                onClick={() => toggleSectionExpanded('yourTickets')}
               >
-<<<<<<< HEAD
-                <CardContent className="p-0">
-                  <div className="flex">
-                    {/* Event image */}
-                    <div className="w-1/3 h-[120px]">
-                      <img 
-                        src={event.imageUrl} 
-                        alt={event.title} 
-                        className="w-full h-full object-cover" 
-                      />
-                    </div>
-=======
                 {expandedSections.yourTickets ? 'Collapse' : 'View all'}
               </Button>
             </div>
@@ -386,34 +404,26 @@ const FindEvents = () => {
                   key={event.id}
                   className="overflow-hidden rounded-2xl cursor-pointer hover:shadow-lg transition-all"
                   onClick={() => {
-                    // Handle click for rectangle event cards
+                    setSelectedEvent(event);
+                    setShowDetail(true);
                   }}
                 >
                   <div className="flex h-24">
                     {/* Event image */}
                     <div 
                       className="w-1/3 bg-cover bg-center"
-                      style={{ backgroundImage: `url(${event.imageUrl || '/placeholder.svg'})` }}
+                      style={{ backgroundImage: `url(${event.imageUrl || 'https://images.unsplash.com/photo-1581092160607-ee23481e1f5b'})` }}
                     />
->>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
                     
                     {/* Event details */}
-                    <div className="w-2/3 p-3 space-y-2">
-                      {/* Title and match score */}
-                      <div className="flex justify-between">
-                        <h3 className="font-medium line-clamp-1">{event.title}</h3>
-                        <Badge className="bg-gathr-coral shrink-0">
-                          {event.matchScore}%
-                        </Badge>
+                    <div className="w-2/3 p-3 flex flex-col justify-between">
+                      <div>
+                        <h3 className="font-medium text-sm line-clamp-1">{event.title}</h3>
+                        <p className="text-xs text-muted-foreground line-clamp-1 mt-1">
+                          {event.description}
+                        </p>
                       </div>
                       
-<<<<<<< HEAD
-                      {/* Date, time, location */}
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Calendar className="h-3 w-3" />
-                          <span>{formatEventDate(event.date)} • {formatEventTime(event.time)}</span>
-=======
                       <div className="flex items-center justify-between">
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center text-xs text-muted-foreground">
@@ -421,52 +431,43 @@ const FindEvents = () => {
                             {format(new Date(event.date), "MMM d, yyyy")}
                           </div>
                           <div className="flex items-center text-xs text-muted-foreground">
+                            <MapPin className="h-3 w-3 mr-1" />
+                            {event.location.slice(0, 15) + (event.location.length > 15 ? '...' : '')}
+                          </div>
+                          <div className="flex items-center text-xs text-muted-foreground">
                             <Clock className="h-3 w-3 mr-1" />
                             {event.startTime} - {event.endTime}
                           </div>
->>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
                         </div>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <MapPin className="h-3 w-3" />
-                          <span className="line-clamp-1">{event.location}</span>
+                        
+                        <div className="flex flex-col items-end gap-1">
+                          <Badge className="bg-gathr-coral text-xs">
+                            {event.matchScore}%
+                          </Badge>
+                          <Badge variant="outline" className="text-xs font-medium">
+                            ${event.price}
+                          </Badge>
                         </div>
                       </div>
-                      
-                      {/* Description truncated */}
-                      <p className="text-xs text-muted-foreground line-clamp-1">
-                        {event.description}
-                      </p>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">No events found matching your criteria</p>
-              <Button 
-                variant="link" 
-                onClick={() => {
-                  setSearchTerm("");
-                  setActiveFilters({ categories: [], date: null, distance: 10 });
-                  setFilteredEvents(events);
-                }}
-              >
-                Clear filters
-              </Button>
+                </Card>
+              ))}
             </div>
-<<<<<<< HEAD
-<<<<<<< HEAD
+          </div>
+          
+          {/* Event detail dialog for More Events section */}
+          {selectedEvent && (
+            <EventDetailDialog 
+              event={selectedEvent} 
+              open={showDetail} 
+              onOpenChange={setShowDetail} 
+            />
           )}
-=======
-          </div>
->>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
-=======
-          </div>
           
           {/* Intersection observer target for infinite loading */}
           <div ref={ref} className="h-10" />
-        </div>
+        </>
       )}
       
       {/* Filter dialog */}
@@ -476,15 +477,6 @@ const FindEvents = () => {
         filters={activeFilters}
         onApplyFilters={applyFilters}
       />
-      
-      {/* Event detail dialog */}
-      {selectedEvent && (
-        <EventDetailDialog
-          event={selectedEvent}
-          open={isDetailOpen}
-          onOpenChange={setIsDetailOpen}
-        />
-      )}
     </div>
   );
 };
