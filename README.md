@@ -82,6 +82,7 @@ Gathr is a social event platform that connects people through shared interests a
 - **Payments**: Payment simulation is included, but it would require a real payment processor integration in production.
 - Users couldn't do the same thing for events on the 'More Events' section, something to be fixed later on.
 - Events' boxes accidentally got turned into rectangles, instead of squares.
+- Background color change is still not good enough.
 
 ## Theme Customization
 
