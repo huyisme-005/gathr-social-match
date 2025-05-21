@@ -31,7 +31,7 @@ interface UserCredentials {
   password: string;
 }
 
-// AuthContext type definition
+// Context type definition
 interface AuthContextType {
   user: User | null;                   // Current user data or null if not logged in
   isAuthenticated: boolean;            // Whether the user is authenticated
@@ -48,43 +48,41 @@ interface AuthContextType {
 }
 
 // Create the context
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  isAuthenticated: false,
+  isAdmin: false,
+  login: async () => false,
+  register: async () => false,
+  logout: () => {},
+  updateUser: () => {},
+});
 
-/**
- * AuthProvider component to wrap the application and provide auth state
- */
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // State for the current user
+// Custom hook to access auth context
+export const useAuth = () => useContext(AuthContext);
+
+// Hardcoded admin user for testing
+const ADMIN_EMAIL = "admin@gathrapplication.com";
+
+// Provider component
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  // Loading state for initial auth check
-  const [isLoading, setIsLoading] = useState(true);
-  // Admin status
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  
-  /**
-   * Check for existing user session on load
-   * In a real app, this would verify a JWT token with the backend
-   */
+
+  // Load user from localStorage on mount
   useEffect(() => {
-    // First check local storage for saved user data
-    const storedUser = localStorage.getItem("gathr_user");
+    const storedUser = localStorage.getItem("user");
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
-        
-        // Check if this is an admin account
-        if (parsedUser.isAdmin) {
-          setIsAdmin(true);
-        }
-        
-        // In a real app, we would verify the token with the backend here
-        // and refresh the user data from the database
-      } catch (e) {
-        localStorage.removeItem("gathr_user");
+        setIsAuthenticated(true);
+        setIsAdmin(parsedUser.email === ADMIN_EMAIL);
+      } catch (error) {
+        console.error("Failed to parse user data:", error);
       }
     }
-    setIsLoading(false);
   }, []);
   
   /**
@@ -290,32 +288,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw error;
     }
   };
-  
-  /**
-   * Logout function - clears the current user session
-   */
+
+  // Logout function
   const logout = () => {
     setUser(null);
+    setIsAuthenticated(false);
     setIsAdmin(false);
-    localStorage.removeItem("gathr_user");
-    
-    toast({
-      title: "Logged out",
-      description: "You have been logged out successfully",
-    });
+    localStorage.removeItem("user");
   };
-  
-  /**
-   * Complete personality test function - updates user profile with personality tags
-   * In a real app, this would save the results to a backend API
-   */
-  const completePersonalityTest = (personalityTags: string[]) => {
+
+  // Update user function
+  const updateUser = (userData: Partial<User>) => {
     if (user) {
-      const updatedUser = {
-        ...user,
-        hasCompletedPersonalityTest: personalityTags.length > 0,
-        personalityTags,
-      };
+      const updatedUser = { ...user, ...userData };
       setUser(updatedUser);
       
       toast({
@@ -390,16 +375,4 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       {children}
     </AuthContext.Provider>
   );
-};
-
-/**
- * Custom hook to use the auth context
- * This simplifies consuming the context in components
- */
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
 };
