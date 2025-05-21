@@ -1,4 +1,3 @@
-
 /**
  * AuthContext
  * 
@@ -10,35 +9,42 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "@/components/ui/use-toast";
 import gathrApi from "../api/gathrApi";
 
-// User type definition
+// User data structure
 interface User {
   id: string;                          // Unique identifier for the user
   name: string;                        // User's display name
   email: string;                       // User's email address
-  hasCompletedPersonalityTest: boolean; // Whether the user has completed the personality test
-  personalityTags: string[];           // User's personality traits from the test
-  phoneNumber?: string;                // User's phone number (optional)
-  country?: string;                    // User's selected country (optional)
-  authProvider?: string;               // Authentication provider used (email, google, facebook, phone)
-  tier?: "free" | "premium" | "enterprise"; // User subscription tier
-  isCorporate?: boolean;               // Whether this is a corporate account
+  personalityTags?: string[];           // User's personality traits from the test
   isAdmin?: boolean;                   // Whether this user is a platform admin
+  tier?: string;                       // User subscription tier
+  isCorporate?: boolean;               // Whether this is a corporate account
+  hasCompletedPersonalityTest?: boolean; // Whether the user has completed the personality test
+  country?: string;                   // User's country
+  authProvider?: string;              // Authentication provider (e.g., email, google, facebook)
+  phoneNumber?: string;                // User's phone number
+}
+
+// User credentials for sign up and login
+interface UserCredentials {
+  name?: string; // Optional for login
+  email: string;
+  password: string;
 }
 
 // AuthContext type definition
 interface AuthContextType {
   user: User | null;                   // Current user data or null if not logged in
   isAuthenticated: boolean;            // Whether the user is authenticated
-  hasCompletedPersonalityTest: boolean; // Whether the user has completed the personality test
-  login: (email: string, password: string) => Promise<void>; // Function to log in
-  register: (name: string, email: string, password: string, country?: string) => Promise<void>; // Function to register
-  socialLogin: (provider: "google" | "facebook" | "twitter") => Promise<void>; // Function for social login
-  phoneLogin: (phoneNumber: string, verificationCode: string) => Promise<void>; // Function for phone login
-  logout: () => void;                  // Function to log out
-  completePersonalityTest: (personalityTags: string[]) => void; // Function to save personality test results
-  updateUserProfile: (data: Partial<User>) => Promise<void>; // Function to update user profile
-  upgradeTier: (tier: "premium" | "enterprise") => Promise<void>; // Function to upgrade subscription tier
   isAdmin: boolean;                    // Whether the current user is a platform admin
+  hasCompletedPersonalityTest: boolean; // Whether the user has completed the personality test
+  completePersonalityTest: (traits: string[]) => void; // Function to save personality test results
+  upgradeTier: (tier: string) => void; // Function to upgrade subscription tier
+  socialLogin: (provider: string) => void; // Function for social login
+  phoneLogin: (phoneNumber: string, code?: string) => Promise<void>; // Function for phone login
+  login: (credentials: UserCredentials) => Promise<boolean>; // Function to log in
+  register: (credentials: UserCredentials) => Promise<boolean>; // Function to register
+  logout: () => void;                  // Function to log out
+  updateUser: (userData: Partial<User>) => void; // Function to update user profile
 }
 
 // Create the context
@@ -94,7 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * Login function - authenticates user credentials
    * In a real app, this would call a backend API endpoint
    */
-  const login = async (email: string, password: string) => {
+  const login = async ({ email, password }: UserCredentials): Promise<boolean> => {
     try {
       // Simulating API call - in a real app, this would call the gathrApi.auth.login
       // Wait for backend to be implemented
@@ -115,6 +121,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           title: "Login successful",
           description: "Welcome to Gathr!",
         });
+        return true;
       } else if (email === "admin@gathr.com" && password === "adminpass") {
         // Demo platform owner/admin account
         const adminUser: User = {
@@ -135,6 +142,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           title: "Admin login successful",
           description: "Welcome to the Gathr admin platform!",
         });
+        return true;
       } else {
         // Check if this is a stored account
         const storedAccounts = localStorage.getItem("gathr_accounts") || "[]";
@@ -153,6 +161,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             title: "Login successful",
             description: "Welcome back to Gathr!",
           });
+          return true;
         } else {
           throw new Error("Invalid credentials");
         }
@@ -163,7 +172,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: error instanceof Error ? error.message : "An error occurred",
         variant: "destructive",
       });
-      throw error;
+      return false;
     }
   };
   
@@ -171,7 +180,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * Register function - creates a new user account
    * In a real app, this would call a backend API endpoint
    */
-  const register = async (name: string, email: string, password: string, country?: string) => {
+  const register = async ({ name, email, password }: UserCredentials): Promise<boolean> => {
     try {
       // Check if account already exists
       const storedAccounts = localStorage.getItem("gathr_accounts") || "[]";
@@ -180,37 +189,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (accounts.some((acc: any) => acc.email === email)) {
         throw new Error("Email already registered");
       }
-      
       // Create new user
       const newUser: User = {
         id: Date.now().toString(),
-        name,
+        name: name || "New User",
         email,
         hasCompletedPersonalityTest: false,
         personalityTags: [],
-        country: country || "United States", // Default country if not specified
+        country: "United States", // Default country if not specified
         authProvider: "email",
         tier: "free" // Default to free tier
       };
-      
       // Store in accounts list (with password) for future logins
       const accountToStore = { ...newUser, password };
       localStorage.setItem("gathr_accounts", JSON.stringify([...accounts, accountToStore]));
-      
       // Set as current user (without password)
       setUser(newUser);
-      
       toast({
         title: "Registration successful",
         description: "Welcome to Gathr!",
       });
+      return true;
     } catch (error) {
       toast({
         title: "Registration failed",
         description: error instanceof Error ? error.message : "An error occurred",
         variant: "destructive",
       });
-      throw error;
+      return false;
     }
   };
   
@@ -218,7 +224,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * Social login function - authenticates with social media providers
    * In a real app, this would use OAuth with the provider
    */
-  const socialLogin = async (provider: "google" | "facebook" | "twitter") => {
+  const socialLogin = async (provider: string) => {
     try {
       // Simulate social login
       const socialUser: User = {
@@ -251,7 +257,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * Phone login function - authenticates with phone number and verification code
    * In a real app, this would send a verification code via SMS
    */
-  const phoneLogin = async (phoneNumber: string, verificationCode: string) => {
+  const phoneLogin = async (phoneNumber: string, verificationCode?: string) => {
     try {
       // In a real app, verify the code with a backend service
       if (verificationCode !== "123456") {
@@ -342,7 +348,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * Upgrade subscription tier function
    * In a real app, this would process payment and update subscription in database
    */
-  const upgradeTier = async (tier: "premium" | "enterprise") => {
+  const upgradeTier = async (tier: string) => {
     if (user) {
       const updatedUser = {
         ...user,
@@ -361,16 +367,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const value = {
     user,
     isAuthenticated: !!user,
+    isAdmin,
     hasCompletedPersonalityTest: user?.hasCompletedPersonalityTest || false,
-    login,
-    register,
+    completePersonalityTest,
+    upgradeTier,
     socialLogin,
     phoneLogin,
+    login,
+    register,
     logout,
-    completePersonalityTest,
-    updateUserProfile,
-    upgradeTier,
-    isAdmin
+    updateUser: updateUserProfile,
   };
 
   // Show loading state while checking authentication
