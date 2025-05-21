@@ -13,6 +13,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
+import React from 'react'; // Add explicit React import
 
 // Layouts
 import AuthLayout from "./layouts/AuthLayout";
@@ -68,7 +69,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 /**
  * App component - the main entry point of the application
  */
-const App = () => (
+const App: React.FC = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
