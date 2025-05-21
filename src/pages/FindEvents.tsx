@@ -26,6 +26,12 @@ const FindEvents = () => {
   // State for filtered events (after search and filter applied)
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   
+  // State for booked events
+  const [bookedEvents, setBookedEvents] = useState<Event[]>([]);
+  
+  // State for more events (national)
+  const [nationalEvents, setNationalEvents] = useState<Event[]>([]);
+  
   // Loading state for initial data fetching
   const [isLoading, setIsLoading] = useState(true);
   
@@ -63,6 +69,13 @@ const FindEvents = () => {
     setTimeout(() => {
       setEvents(mockEvents);
       setFilteredEvents(mockEvents);
+      
+      // Get some random events for the booked section
+      setBookedEvents(mockEvents.slice(0, 3));
+      
+      // Get some random events for the national section
+      setNationalEvents(mockEvents.slice(6, 12));
+      
       setIsLoading(false);
     }, 1000);
   }, []);
@@ -205,17 +218,26 @@ const FindEvents = () => {
               <Button variant="link" className="text-xs text-gathr-coral p-0">View all</Button>
             </div>
             
-            <div className="flex overflow-x-auto gap-3 pb-2 scrollbar-hide">
-              {filteredEvents.slice(0, 3).map((event) => (
-                <div key={event.id} className="min-w-[160px] w-[160px]">
-                  <EventCard 
-                    event={event} 
-                    view="grid"
-                    isBooked={true}
-                  />
-                </div>
-              ))}
-            </div>
+            {bookedEvents.length > 0 ? (
+              <div className="flex overflow-x-auto gap-3 pb-2 scrollbar-hide">
+                {bookedEvents.map((event) => (
+                  <div key={event.id} className="min-w-[160px] w-[160px]">
+                    <EventCard 
+                      event={event} 
+                      view="grid"
+                      isBooked={true}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4 bg-secondary/30 rounded-xl">
+                <p className="text-muted-foreground">No booked events yet</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Book events to see them appear here
+                </p>
+              </div>
+            )}
           </div>
           
           {/* Section: Explore Nearby */}
@@ -227,7 +249,7 @@ const FindEvents = () => {
             
             {filteredEvents.length > 0 ? (
               <div className="event-grid">
-                {filteredEvents.map((event) => (
+                {filteredEvents.slice(0, 4).map((event) => (
                   <EventCard 
                     key={event.id} 
                     event={event}
@@ -250,6 +272,55 @@ const FindEvents = () => {
                 </Button>
               </div>
             )}
+          </div>
+          
+          {/* Section: More Events */}
+          <div className="mt-6">
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="font-medium">More Events</h2>
+              <Button variant="link" className="text-xs text-gathr-coral p-0">View all</Button>
+            </div>
+            
+            <div className="space-y-4">
+              {nationalEvents.slice(0, 3).map((event) => (
+                <Card 
+                  key={event.id}
+                  className="overflow-hidden rounded-2xl cursor-pointer hover:shadow-lg transition-all"
+                  onClick={() => {
+                    // Handle click for rectangle event cards
+                  }}
+                >
+                  <div className="flex h-24">
+                    {/* Event image */}
+                    <div 
+                      className="w-1/3 bg-cover bg-center"
+                      style={{ backgroundImage: `url(${event.imageUrl || '/placeholder.svg'})` }}
+                    />
+                    
+                    {/* Event details */}
+                    <div className="w-2/3 p-3 flex flex-col justify-between">
+                      <div>
+                        <h3 className="font-medium text-sm line-clamp-1">{event.title}</h3>
+                        <p className="text-xs text-muted-foreground line-clamp-1 mt-1">
+                          {event.description}
+                        </p>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center text-xs text-muted-foreground">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          {format(new Date(event.date), "MMM d")}
+                        </div>
+                        
+                        <Badge className="bg-gathr-coral text-xs">
+                          {event.matchScore}%
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
           </div>
           
           {/* Intersection observer target for infinite loading */}
