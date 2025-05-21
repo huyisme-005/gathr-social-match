@@ -85,6 +85,10 @@ Gathr is a social event platform that connects people through shared interests a
 
 The app supports custom background colors with several preset options including black, white, dark gray, navy, and dark purple. Access the theme toggle from the top-right corner of the main pages.
 
+## Data Persistence
+
+User accounts and booked events are stored in the browser's local storage, allowing you to return to the application and maintain your session data even after closing the browser.
+
 ## Contributing
 
 1. Fork the repository
@@ -96,3 +100,4 @@ The app supports custom background colors with several preset options including 
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
