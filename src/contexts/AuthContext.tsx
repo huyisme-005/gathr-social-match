@@ -89,7 +89,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         // Set user state
         const loggedInUser = {
-          ...userWithoutPassword,
+          // Ensure name is always present (fallback to empty string if missing)
+          name: userWithoutPassword.name ?? "",
+          email: userWithoutPassword.email,
+          id: userWithoutPassword.id,
           personalityTags: ["Tech", "Education", "Development", "Design"],
           isAdmin: credentials.email === ADMIN_EMAIL
         };
