@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-=======
-
->>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
 /**
  * AuthContext
  * 
@@ -13,12 +9,12 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "@/components/ui/use-toast";
 import gathrApi from "../api/gathrApi";
 
+
 // User type definition
 interface User {
   id: string;                          // Unique identifier for the user
   name: string;                        // User's display name
   email: string;                       // User's email address
-<<<<<<< HEAD
   personalityTags?: string[];           // User's personality traits from the test
   isAdmin?: boolean;                   // Whether this user is a platform admin
   tier?: string;                       // User subscription tier
@@ -27,34 +23,19 @@ interface User {
   country?: string;                   // User's country
   authProvider?: string;              // Authentication provider (e.g., email, google, facebook)
   phoneNumber?: string;                // User's phone number
-=======
-  hasCompletedPersonalityTest: boolean; // Whether the user has completed the personality test
-  personalityTags: string[];           // User's personality traits from the test
-  phoneNumber?: string;                // User's phone number (optional)
-  country?: string;                    // User's selected country (optional)
-  authProvider?: string;               // Authentication provider used (email, google, facebook, phone)
-  tier?: "free" | "premium" | "enterprise"; // User subscription tier
-  isCorporate?: boolean;               // Whether this is a corporate account
-  isAdmin?: boolean;                   // Whether this user is a platform admin
->>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
+}
+
+// User credentials for sign up and login
+interface UserCredentials {
+  name?: string; // Optional for login
+  email: string;
+  password: string;
 }
 
 // AuthContext type definition
 interface AuthContextType {
   user: User | null;                   // Current user data or null if not logged in
   isAuthenticated: boolean;            // Whether the user is authenticated
-<<<<<<< HEAD
-  isAdmin: boolean;                    // Whether the current user is a platform admin
-  hasCompletedPersonalityTest: boolean; // Whether the user has completed the personality test
-  completePersonalityTest: (traits: string[]) => void; // Function to save personality test results
-  upgradeTier: (tier: string) => void; // Function to upgrade subscription tier
-  socialLogin: (provider: string) => void; // Function for social login
-  phoneLogin: (phoneNumber: string, code?: string) => Promise<void>; // Function for phone login
-  login: (credentials: UserCredentials) => Promise<boolean>; // Function to log in
-  register: (credentials: UserCredentials) => Promise<boolean>; // Function to register
-  logout: () => void;                  // Function to log out
-  updateUser: (userData: Partial<User>) => void; // Function to update user profile
-=======
   hasCompletedPersonalityTest: boolean; // Whether the user has completed the personality test
   login: (email: string, password: string) => Promise<void>; // Function to log in
   register: (name: string, email: string, password: string, country?: string) => Promise<void>; // Function to register
@@ -65,7 +46,6 @@ interface AuthContextType {
   updateUserProfile: (data: Partial<User>) => Promise<void>; // Function to update user profile
   upgradeTier: (tier: "premium" | "enterprise") => Promise<void>; // Function to upgrade subscription tier
   isAdmin: boolean;                    // Whether the current user is a platform admin
->>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
 }
 
 // Create the context
@@ -121,11 +101,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * Login function - authenticates user credentials
    * In a real app, this would call a backend API endpoint
    */
-<<<<<<< HEAD
   const login = async ({ email, password }: UserCredentials): Promise<boolean> => {
-=======
+  
+  /**
+   * Save user data to local storage whenever it changes
+   */
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem("gathr_user", JSON.stringify(user));
+    }
+  }, [user]);
+  
+  /**
+   * Login function - authenticates user credentials
+   * In a real app, this would call a backend API endpoint
+   */
   const login = async (email: string, password: string) => {
->>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
     try {
       // Simulating API call - in a real app, this would call the gathrApi.auth.login
       // Wait for backend to be implemented
@@ -146,10 +137,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           title: "Login successful",
           description: "Welcome to Gathr!",
         });
-<<<<<<< HEAD
-        return true;
-=======
->>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
       } else if (email === "admin@gathr.com" && password === "adminpass") {
         // Demo platform owner/admin account
         const adminUser: User = {
@@ -170,10 +157,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           title: "Admin login successful",
           description: "Welcome to the Gathr admin platform!",
         });
-<<<<<<< HEAD
-        return true;
-=======
->>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
       } else {
         // Check if this is a stored account
         const storedAccounts = localStorage.getItem("gathr_accounts") || "[]";
@@ -192,67 +175,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             title: "Login successful",
             description: "Welcome back to Gathr!",
           });
-<<<<<<< HEAD
-          return true;
-=======
->>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
         } else {
           throw new Error("Invalid credentials");
         }
       }
-    } catch (error) {
-      toast({
-        title: "Login failed",
-        description: error instanceof Error ? error.message : "An error occurred",
-        variant: "destructive",
-      });
-<<<<<<< HEAD
-      return false;
-=======
-      throw error;
->>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
-    }
-  };
-  
-  /**
-   * Register function - creates a new user account
-   * In a real app, this would call a backend API endpoint
-   */
-<<<<<<< HEAD
-  const register = async ({ name, email, password }: UserCredentials): Promise<boolean> => {
-=======
-  const register = async (name: string, email: string, password: string, country?: string) => {
->>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
-    try {
-      // Check if account already exists
-      const storedAccounts = localStorage.getItem("gathr_accounts") || "[]";
-      const accounts = JSON.parse(storedAccounts);
-      
-      if (accounts.some((acc: any) => acc.email === email)) {
-        throw new Error("Email already registered");
-      }
-<<<<<<< HEAD
-      // Create new user
-      const newUser: User = {
-        id: Date.now().toString(),
-        name: name || "New User",
-        email,
-        hasCompletedPersonalityTest: false,
-        personalityTags: [],
-        country: "United States", // Default country if not specified
-        authProvider: "email",
-        tier: "free" // Default to free tier
-      };
-      // Store in accounts list (with password) for future logins
-      const accountToStore = { ...newUser, password };
-      localStorage.setItem("gathr_accounts", JSON.stringify([...accounts, accountToStore]));
-      // Set as current user (without password)
-      setUser(newUser);
-      toast({
-        title: "Registration successful",
-        description: "Welcome to Gathr!",
-      });
-      return true;
     } catch (error) {
       toast({
         title: "Registration failed",
@@ -260,6 +186,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         variant: "destructive",
       });
       return false;
+      toast({
+        title: "Login failed",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      });
+      throw error;
     }
   };
   
@@ -324,10 +256,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: "Phone login successful",
         description: "You've logged in with your phone number!",
       });
-    } catch (error) {
-      toast({
-        title: "Phone login failed",
-=======
+  
+  /**
+   * Register function - creates a new user account
+   * In a real app, this would call a backend API endpoint
+   */
+  const register = async (name: string, email: string, password: string, country?: string) => {
+    try {
+      // Check if account already exists
+      const storedAccounts = localStorage.getItem("gathr_accounts") || "[]";
+      const accounts = JSON.parse(storedAccounts);
+      
+      if (accounts.some((acc: any) => acc.email === email)) {
+        throw new Error("Email already registered");
+      }
       
       // Create new user
       const newUser: User = {
@@ -355,7 +297,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       toast({
         title: "Registration failed",
->>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
         description: error instanceof Error ? error.message : "An error occurred",
         variant: "destructive",
       });
@@ -491,11 +432,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * Upgrade subscription tier function
    * In a real app, this would process payment and update subscription in database
    */
-<<<<<<< HEAD
   const upgradeTier = async (tier: string) => {
-=======
+    if (user) {
+      const updatedUser = {
+        ...user,
+        tier
+      };
+      setUser(updatedUser);
+      
+      toast({
+        title: "Subscription upgraded",
+        description: `You've successfully upgraded to the ${tier} tier!`,
+      });
+      
+      toast({
+        title: "Personality test completed",
+        description: "Your profile has been updated with your personality traits",
+      });
+    }
+  };
+  
+  /**
+   * Update user profile function - updates user data
+   * In a real app, this would save to a backend API
+   */
+  const updateUserProfile = async (data: Partial<User>) => {
+    if (user) {
+      const updatedUser = {
+        ...user,
+        ...data
+      };
+      setUser(updatedUser);
+      
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been updated successfully",
+      });
+    }
+  };
+  
+  /**
+   * Upgrade subscription tier function
+   * In a real app, this would process payment and update subscription in database
+   */
   const upgradeTier = async (tier: "premium" | "enterprise") => {
->>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
     if (user) {
       const updatedUser = {
         ...user,
@@ -514,7 +494,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const value = {
     user,
     isAuthenticated: !!user,
-<<<<<<< HEAD
     isAdmin,
     hasCompletedPersonalityTest: user?.hasCompletedPersonalityTest || false,
     completePersonalityTest,
@@ -525,7 +504,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     register,
     logout,
     updateUser: updateUserProfile,
-=======
+  };
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return <div>Loading authentication...</div>;
+  }
+
+  // Provide the auth context to the entire app
+  return (
+    <AuthContext.Provider value={value}>
+  // Create the context value object
+  const value = {
+    user,
+    isAuthenticated: !!user,
     hasCompletedPersonalityTest: user?.hasCompletedPersonalityTest || false,
     login,
     register,
@@ -536,7 +528,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateUserProfile,
     upgradeTier,
     isAdmin
->>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
   };
 
   // Show loading state while checking authentication
