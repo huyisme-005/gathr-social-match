@@ -15,14 +15,14 @@ interface User {
   id: string;                          // Unique identifier for the user
   name: string;                        // User's display name
   email: string;                       // User's email address
-  personalityTags?: string[];           // User's personality traits from the test
-  isAdmin?: boolean;                   // Whether this user is a platform admin
-  tier?: string;                       // User subscription tier
-  isCorporate?: boolean;               // Whether this is a corporate account
   hasCompletedPersonalityTest?: boolean; // Whether the user has completed the personality test
-  country?: string;                   // User's country
-  authProvider?: string;              // Authentication provider (e.g., email, google, facebook)
-  phoneNumber?: string;                // User's phone number
+  personalityTags?: string[];           // User's personality traits from the test
+  phoneNumber?: string;                // User's phone number (optional)
+  country?: string;                    // User's selected country (optional)
+  authProvider?: string;               // Authentication provider used (email, google, facebook, phone)
+  tier?: "free" | "premium" | "enterprise"; // User subscription tier
+  isCorporate?: boolean;               // Whether this is a corporate account
+  isAdmin?: boolean;                   // Whether this user is a platform admin
 }
 
 // User credentials for sign up and login
@@ -34,18 +34,18 @@ interface UserCredentials {
 
 // AuthContext type definition
 interface AuthContextType {
-  user: User | null;                   // Current user data or null if not logged in
-  isAuthenticated: boolean;            // Whether the user is authenticated
-  hasCompletedPersonalityTest: boolean; // Whether the user has completed the personality test
-  login: (email: string, password: string) => Promise<void>; // Function to log in
-  register: (name: string, email: string, password: string, country?: string) => Promise<void>; // Function to register
-  socialLogin: (provider: "google" | "facebook" | "twitter") => Promise<void>; // Function for social login
-  phoneLogin: (phoneNumber: string, verificationCode: string) => Promise<void>; // Function for phone login
-  logout: () => void;                  // Function to log out
-  completePersonalityTest: (personalityTags: string[]) => void; // Function to save personality test results
-  updateUserProfile: (data: Partial<User>) => Promise<void>; // Function to update user profile
-  upgradeTier: (tier: "premium" | "enterprise") => Promise<void>; // Function to upgrade subscription tier
-  isAdmin: boolean;                    // Whether the current user is a platform admin
+  user: User | null;
+  isAuthenticated: boolean;
+  hasCompletedPersonalityTest: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string, country?: string) => Promise<void>;
+  socialLogin: (provider: "google" | "facebook" | "twitter") => Promise<void>;
+  phoneLogin: (phoneNumber: string, verificationCode: string) => Promise<void>;
+  logout: () => void;
+  completePersonalityTest: (personalityTags: string[]) => void;
+  updateUserProfile: (data: Partial<User>) => Promise<void>;
+  upgradeTier: (tier: "premium" | "enterprise") => Promise<void>;
+  isAdmin: boolean;
 }
 
 // Create the context
@@ -87,21 +87,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     setIsLoading(false);
   }, []);
-  
-  /**
-   * Save user data to local storage whenever it changes
-   */
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem("gathr_user", JSON.stringify(user));
-    }
-  }, [user]);
-  
-  /**
-   * Login function - authenticates user credentials
-   * In a real app, this would call a backend API endpoint
-   */
-  const login = async ({ email, password }: UserCredentials): Promise<boolean> => {
   
   /**
    * Save user data to local storage whenever it changes
@@ -181,12 +166,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       toast({
-        title: "Registration failed",
-        description: error instanceof Error ? error.message : "An error occurred",
-        variant: "destructive",
-      });
-      return false;
-      toast({
         title: "Login failed",
         description: error instanceof Error ? error.message : "An error occurred",
         variant: "destructive",
@@ -233,115 +212,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * In a real app, this would send a verification code via SMS
    */
   const phoneLogin = async (phoneNumber: string, verificationCode?: string) => {
-    try {
-      // In a real app, verify the code with a backend service
-      if (verificationCode !== "123456") {
-        throw new Error("Invalid verification code");
-      }
-      
-      const phoneUser: User = {
-        id: `phone_${Date.now()}`,
-        name: "Phone User",
-        email: `${phoneNumber.replace(/\D/g, '')}@phone.gathr.com`, // Generate email from phone
-        phoneNumber,
-        hasCompletedPersonalityTest: false,
-        personalityTags: [],
-        authProvider: "phone",
-        tier: "free"
-      };
-      
-      setUser(phoneUser);
-      
-      toast({
-        title: "Phone login successful",
-        description: "You've logged in with your phone number!",
-      });
-  
-  /**
-   * Register function - creates a new user account
-   * In a real app, this would call a backend API endpoint
-   */
-  const register = async (name: string, email: string, password: string, country?: string) => {
-    try {
-      // Check if account already exists
-      const storedAccounts = localStorage.getItem("gathr_accounts") || "[]";
-      const accounts = JSON.parse(storedAccounts);
-      
-      if (accounts.some((acc: any) => acc.email === email)) {
-        throw new Error("Email already registered");
-      }
-      
-      // Create new user
-      const newUser: User = {
-        id: Date.now().toString(),
-        name,
-        email,
-        hasCompletedPersonalityTest: false,
-        personalityTags: [],
-        country: country || "United States", // Default country if not specified
-        authProvider: "email",
-        tier: "free" // Default to free tier
-      };
-      
-      // Store in accounts list (with password) for future logins
-      const accountToStore = { ...newUser, password };
-      localStorage.setItem("gathr_accounts", JSON.stringify([...accounts, accountToStore]));
-      
-      // Set as current user (without password)
-      setUser(newUser);
-      
-      toast({
-        title: "Registration successful",
-        description: "Welcome to Gathr!",
-      });
-    } catch (error) {
-      toast({
-        title: "Registration failed",
-        description: error instanceof Error ? error.message : "An error occurred",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-  
-  /**
-   * Social login function - authenticates with social media providers
-   * In a real app, this would use OAuth with the provider
-   */
-  const socialLogin = async (provider: "google" | "facebook" | "twitter") => {
-    try {
-      // Simulate social login
-      const socialUser: User = {
-        id: `${provider}_${Date.now()}`,
-        name: `${provider.charAt(0).toUpperCase() + provider.slice(1)} User`,
-        email: `user@${provider}.example.com`,
-        hasCompletedPersonalityTest: false,
-        personalityTags: [],
-        authProvider: provider,
-        tier: "free"
-      };
-      
-      setUser(socialUser);
-      
-      toast({
-        title: "Social login successful",
-        description: `You've logged in with ${provider.charAt(0).toUpperCase() + provider.slice(1)}!`,
-      });
-    } catch (error) {
-      toast({
-        title: "Social login failed",
-        description: error instanceof Error ? error.message : "An error occurred",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-  
-  /**
-   * Phone login function - authenticates with phone number and verification code
-   * In a real app, this would send a verification code via SMS
-   */
-  const phoneLogin = async (phoneNumber: string, verificationCode: string) => {
     try {
       // In a real app, verify the code with a backend service
       if (verificationCode !== "123456") {
@@ -432,49 +302,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * Upgrade subscription tier function
    * In a real app, this would process payment and update subscription in database
    */
-  const upgradeTier = async (tier: string) => {
-    if (user) {
-      const updatedUser = {
-        ...user,
-        tier
-      };
-      setUser(updatedUser);
-      
-      toast({
-        title: "Subscription upgraded",
-        description: `You've successfully upgraded to the ${tier} tier!`,
-      });
-      
-      toast({
-        title: "Personality test completed",
-        description: "Your profile has been updated with your personality traits",
-      });
-    }
-  };
-  
-  /**
-   * Update user profile function - updates user data
-   * In a real app, this would save to a backend API
-   */
-  const updateUserProfile = async (data: Partial<User>) => {
-    if (user) {
-      const updatedUser = {
-        ...user,
-        ...data
-      };
-      setUser(updatedUser);
-      
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully",
-      });
-    }
-  };
-  
-  /**
-   * Upgrade subscription tier function
-   * In a real app, this would process payment and update subscription in database
-   */
   const upgradeTier = async (tier: "premium" | "enterprise") => {
     if (user) {
       const updatedUser = {
@@ -490,32 +317,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Create the context value object
-  const value = {
-    user,
-    isAuthenticated: !!user,
-    isAdmin,
-    hasCompletedPersonalityTest: user?.hasCompletedPersonalityTest || false,
-    completePersonalityTest,
-    upgradeTier,
-    socialLogin,
-    phoneLogin,
-    login,
-    register,
-    logout,
-    updateUser: updateUserProfile,
+  // Register function - creates a new user account
+  const register = async (name: string, email: string, password: string, country?: string) => {
+    try {
+      // Check if account already exists
+      const storedAccounts = localStorage.getItem("gathr_accounts") || "[]";
+      const accounts = JSON.parse(storedAccounts);
+      if (accounts.some((acc: any) => acc.email === email)) {
+        throw new Error("Email already registered");
+      }
+      // Create new user
+      const newUser: User = {
+        id: Date.now().toString(),
+        name,
+        email,
+        hasCompletedPersonalityTest: false,
+        personalityTags: [],
+        country: country || "United States",
+        authProvider: "email",
+        tier: "free"
+      };
+      // Store in accounts list (with password) for future logins
+      const accountToStore = { ...newUser, password };
+      localStorage.setItem("gathr_accounts", JSON.stringify([...accounts, accountToStore]));
+      // Set as current user (without password)
+      setUser(newUser);
+      toast({
+        title: "Registration successful",
+        description: "Welcome to Gathr!",
+      });
+    } catch (error) {
+      toast({
+        title: "Registration failed",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      });
+      throw error;
+    }
   };
 
-  // Show loading state while checking authentication
-  if (isLoading) {
-    return <div>Loading authentication...</div>;
-  }
-
-  // Provide the auth context to the entire app
-  return (
-    <AuthContext.Provider value={value}>
   // Create the context value object
-  const value = {
+  const value: AuthContextType = {
     user,
     isAuthenticated: !!user,
     hasCompletedPersonalityTest: user?.hasCompletedPersonalityTest || false,
@@ -530,12 +372,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAdmin
   };
 
-  // Show loading state while checking authentication
   if (isLoading) {
     return <div>Loading authentication...</div>;
   }
 
-  // Provide the auth context to the entire app
   return (
     <AuthContext.Provider value={value}>
       {children}

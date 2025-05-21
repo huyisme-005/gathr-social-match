@@ -17,7 +17,11 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "../contexts/AuthContext";
 import EventFilterDialog from "../components/EventFilterDialog";
 <<<<<<< HEAD
+<<<<<<< HEAD
 import EventDetailDialog from "../components/EventDetailDialog";
+=======
+import EventCard from "../components/EventCard";
+>>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
 =======
 import EventCard from "../components/EventCard";
 >>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
@@ -218,6 +222,7 @@ const FindEvents = () => {
   
   /**
 <<<<<<< HEAD
+<<<<<<< HEAD
    * Format the event date for display
    */
   const formatEventDate = (dateString: string) => {
@@ -228,6 +233,8 @@ const FindEvents = () => {
   /**
    * Format the event time for display
 =======
+=======
+>>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
    * Toggle the expanded state of a section
 >>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
    */
@@ -468,7 +475,11 @@ const FindEvents = () => {
               </Button>
             </div>
 <<<<<<< HEAD
+<<<<<<< HEAD
           )}
+=======
+          </div>
+>>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
 =======
           </div>
 >>>>>>> parent of 548a6da (feat: Enhance More Events section and user accounts)
