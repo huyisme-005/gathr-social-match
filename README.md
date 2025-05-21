@@ -6,11 +6,19 @@ Gathr is a social event platform that connects people through shared interests a
 ## Features
 
 - **Event Discovery**: Find events based on your personality traits and location
-- **Event Booking**: Book events and manage your upcoming schedule
+- **Event Booking & Payment**: Book events with integrated payment functionality and refund policy
 - **Personality Matching**: Get matched with events and people based on your personality test
 - **Social Circle**: Connect with like-minded individuals
 - **Event Creation**: Create and manage your own events
 - **Admin Dashboard**: Platform management for administrators
+- **Customizable Theme**: Change background colors to suit your preferences
+
+## Event Features
+- **Price Display**: Clear pricing for all events
+- **Time Details**: View start and end times for better planning
+- **Carousel Navigation**: Browse events with convenient left/right navigation
+- **Expandable Sections**: Show more events with "View all" / "Collapse" functionality
+- **Refund Policy**: Full refunds within 24 hours of booking
 
 ## Tech Stack
 
@@ -21,6 +29,7 @@ Gathr is a social event platform that connects people through shared interests a
 - date-fns for date formatting
 - lucide-react for icons
 - React Query for data fetching
+- Sonner for toast notifications
 
 ## Getting Started
 
@@ -61,17 +70,20 @@ Gathr is a social event platform that connects people through shared interests a
 
 - **Components**: Reusable UI components
   - `EventCard.tsx`: Card display for events
+  - `EventDetailDialog.tsx`: Detailed event information and booking
   - `BottomNavbar.tsx`: Mobile navigation bar
   - `Header.tsx`: Top application header
+  - `ThemeToggle.tsx`: Background color customization
 
 ## Known Issues
 
-- **Admin Navigation**: When on the admin page, use the "Back to App" button in the header to return to the main app.
+- **Admin Navigation**: Use the "Back to App" button in the header to return to the main app from admin page.
 - **Event Booking**: Currently implemented as a client-side state only. In a production app, this would connect to an API.
+- **Payments**: Payment simulation is included, but it would require a real payment processor integration in production.
 
 ## Theme Customization
 
-The app supports dark mode by default with a theme toggle in the top-right corner of the main pages.
+The app supports custom background colors with several preset options including black, white, dark gray, navy, and dark purple. Access the theme toggle from the top-right corner of the main pages.
 
 ## Contributing
 

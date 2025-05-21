@@ -6,21 +6,29 @@
  * It displays a list of events with infinite scrolling, search functionality,
  * and filtering options. Events are recommended based on the user's personality.
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useInView } from "react-intersection-observer";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, Calendar, MapPin } from "lucide-react";
+import { Search, Filter, Calendar, MapPin, Clock, ChevronRight, ChevronLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "../contexts/AuthContext";
 import EventFilterDialog from "../components/EventFilterDialog";
 import EventCard from "../components/EventCard";
 import { mockEvents } from "../data/mockEvents";
 import { Event } from "../types/event";
 import { ThemeToggle } from "../components/ThemeToggle";
+import { 
+  Carousel, 
+  CarouselContent, 
+  CarouselItem, 
+  CarouselNext, 
+  CarouselPrevious 
+} from "@/components/ui/carousel";
 
 const FindEvents = () => {
   // State for all events data
@@ -47,6 +55,13 @@ const FindEvents = () => {
   // State to control filter dialog visibility
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   
+  // State for expanded sections
+  const [expandedSections, setExpandedSections] = useState({
+    yourTickets: false,
+    exploreNearby: false,
+    moreEvents: false
+  });
+  
   // State for active filters
   const [activeFilters, setActiveFilters] = useState({
     categories: [] as string[],  // Selected event categories
@@ -70,14 +85,34 @@ const FindEvents = () => {
   useEffect(() => {
     // Simulating API call delay
     setTimeout(() => {
-      setEvents(mockEvents);
-      setFilteredEvents(mockEvents);
+      // Add price and time details to events
+      const enhancedEvents = mockEvents.map(event => ({
+        ...event,
+        price: Math.floor(Math.random() * 100) + 10, // Random price between $10-$110
+        startTime: `${event.time}`,
+        endTime: `${parseInt(event.time.split(':')[0]) + 2}:${event.time.split(':')[1]}`, // 2 hours after start
+        imageUrl: event.id === "1" ? "https://images.unsplash.com/photo-1581092160607-ee23481e1f5b" : event.imageUrl
+      }));
+      
+      setEvents(enhancedEvents);
+      setFilteredEvents(enhancedEvents);
       
       // Get some random events for the booked section
-      setBookedEvents(mockEvents.slice(0, 3));
+      setBookedEvents(enhancedEvents.slice(0, 3));
       
       // Get some random events for the national section
-      setNationalEvents(mockEvents.slice(6, 12));
+      // Adding more events to the national section
+      const moreNationalEvents = [
+        ...enhancedEvents.slice(3, 9),
+        ...enhancedEvents.map(evt => ({ 
+          ...evt, 
+          id: `${evt.id}-copy`, 
+          title: `${evt.title} ${Math.floor(Math.random() * 100)}`,
+          price: Math.floor(Math.random() * 100) + 10
+        })).slice(0, 6)
+      ];
+      
+      setNationalEvents(moreNationalEvents);
       
       setIsLoading(false);
     }, 1000);
@@ -176,6 +211,16 @@ const FindEvents = () => {
       setFilteredEvents(sortedEvents);
     }
   }, [user?.personalityTags, events]);
+
+  /**
+   * Toggle the expanded state of a section
+   */
+  const toggleSectionExpanded = (section: 'yourTickets' | 'exploreNearby' | 'moreEvents') => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
   
   return (
     <div className="space-y-4">
@@ -218,21 +263,35 @@ const FindEvents = () => {
           <div className="mt-6">
             <div className="flex justify-between items-center mb-2">
               <h2 className="font-medium">Your Ticket Events</h2>
-              <Button variant="link" className="text-xs text-gathr-coral p-0">View all</Button>
+              <Button 
+                variant="link" 
+                className="text-xs text-green-500 p-0"
+                onClick={() => toggleSectionExpanded('yourTickets')}
+              >
+                {expandedSections.yourTickets ? 'Collapse' : 'View all'}
+              </Button>
             </div>
             
             {bookedEvents.length > 0 ? (
-              <div className="flex overflow-x-auto gap-3 pb-2 scrollbar-hide">
-                {bookedEvents.map((event) => (
-                  <div key={event.id} className="min-w-[160px] w-[160px]">
-                    <EventCard 
-                      event={event} 
-                      view="grid"
-                      isBooked={true}
-                    />
-                  </div>
-                ))}
-              </div>
+              <Carousel className="w-full">
+                <CarouselContent className="-ml-2 md:-ml-4">
+                  {bookedEvents.map((event) => (
+                    <CarouselItem 
+                      key={event.id} 
+                      className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+                      style={{ minWidth: expandedSections.yourTickets ? "auto" : "160px", width: expandedSections.yourTickets ? "100%" : "160px" }}
+                    >
+                      <EventCard 
+                        event={event} 
+                        view="grid"
+                        isBooked={true}
+                      />
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-0 bg-gray-100" />
+                <CarouselNext className="right-0 bg-gray-100" />
+              </Carousel>
             ) : (
               <div className="text-center py-4 bg-secondary/30 rounded-xl">
                 <p className="text-muted-foreground">No booked events yet</p>
@@ -247,19 +306,35 @@ const FindEvents = () => {
           <div className="mt-6">
             <div className="flex justify-between items-center mb-2">
               <h2 className="font-medium">Explore Nearby</h2>
-              <Button variant="link" className="text-xs text-gathr-coral p-0">View all</Button>
+              <Button 
+                variant="link" 
+                className="text-xs text-green-500 p-0"
+                onClick={() => toggleSectionExpanded('exploreNearby')}
+              >
+                {expandedSections.exploreNearby ? 'Collapse' : 'View all'}
+              </Button>
             </div>
             
             {filteredEvents.length > 0 ? (
-              <div className="event-grid">
-                {filteredEvents.slice(0, 4).map((event) => (
-                  <EventCard 
-                    key={event.id} 
-                    event={event}
-                    view="grid"
-                  />
-                ))}
-              </div>
+              <Carousel className="w-full">
+                <CarouselContent className="-ml-2 md:-ml-4">
+                  {filteredEvents.slice(0, expandedSections.exploreNearby ? filteredEvents.length : 4).map((event) => (
+                    <CarouselItem 
+                      key={event.id} 
+                      className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+                      style={{ minWidth: expandedSections.exploreNearby ? "auto" : "180px", width: expandedSections.exploreNearby ? "100%" : "180px" }}
+                    >
+                      <EventCard 
+                        key={event.id} 
+                        event={event}
+                        view="grid"
+                      />
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-0 bg-gray-100" />
+                <CarouselNext className="right-0 bg-gray-100" />
+              </Carousel>
             ) : (
               <div className="text-center py-8">
                 <p className="text-muted-foreground">No events found matching your criteria</p>
@@ -281,11 +356,17 @@ const FindEvents = () => {
           <div className="mt-6">
             <div className="flex justify-between items-center mb-2">
               <h2 className="font-medium">More Events</h2>
-              <Button variant="link" className="text-xs text-gathr-coral p-0">View all</Button>
+              <Button 
+                variant="link" 
+                className="text-xs text-green-500 p-0"
+                onClick={() => toggleSectionExpanded('moreEvents')}
+              >
+                {expandedSections.moreEvents ? 'Collapse' : 'View all'}
+              </Button>
             </div>
             
             <div className="space-y-4">
-              {nationalEvents.slice(0, 3).map((event) => (
+              {nationalEvents.slice(0, expandedSections.moreEvents ? nationalEvents.length : 3).map((event) => (
                 <Card 
                   key={event.id}
                   className="overflow-hidden rounded-2xl cursor-pointer hover:shadow-lg transition-all"
@@ -310,14 +391,25 @@ const FindEvents = () => {
                       </div>
                       
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center text-xs text-muted-foreground">
-                          <Calendar className="h-3 w-3 mr-1" />
-                          {format(new Date(event.date), "MMM d")}
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center text-xs text-muted-foreground">
+                            <Calendar className="h-3 w-3 mr-1" />
+                            {format(new Date(event.date), "MMM d, yyyy")}
+                          </div>
+                          <div className="flex items-center text-xs text-muted-foreground">
+                            <Clock className="h-3 w-3 mr-1" />
+                            {event.startTime} - {event.endTime}
+                          </div>
                         </div>
                         
-                        <Badge className="bg-gathr-coral text-xs">
-                          {event.matchScore}%
-                        </Badge>
+                        <div className="flex flex-col items-end gap-1">
+                          <Badge className="bg-gathr-coral text-xs">
+                            {event.matchScore}%
+                          </Badge>
+                          <Badge variant="outline" className="text-xs font-medium">
+                            ${event.price}
+                          </Badge>
+                        </div>
                       </div>
                     </div>
                   </div>
