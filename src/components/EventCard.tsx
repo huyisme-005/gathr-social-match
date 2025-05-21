@@ -7,9 +7,9 @@
  * relationship to the event (attendee, creator, or potential attendee).
  */
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, X, Check } from "lucide-react";
 import { format } from "date-fns";
 import { Event } from "../types/event";
 import { toast } from "@/components/ui/use-toast";
