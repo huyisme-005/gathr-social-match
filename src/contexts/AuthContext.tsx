@@ -1,537 +1,270 @@
 
-/**
- * AuthContext
- * 
- * This context provides authentication state and functions throughout the application.
- * It handles user login, registration, logout, and personality test completion.
- * Supports email/password, social media, and phone authentication methods.
- */
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { toast } from "@/components/ui/use-toast";
-import gathrApi from "../api/gathrApi";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-// User type definition
+// Define user type with all necessary fields
 export interface User {
-  id: string;                          // Unique identifier for the user
-  name: string;                        // User's display name
-  email: string;                       // User's email address
-  hasCompletedPersonalityTest: boolean; // Whether the user has completed the personality test
-  personalityTags: string[];           // User's personality traits from the test
-  phoneNumber?: string;                // User's phone number (optional)
-  country?: string;                    // User's selected country (optional)
-  authProvider?: string;               // Authentication provider used (email, google, facebook, phone)
-  tier?: "free" | "premium" | "enterprise"; // User subscription tier
-  isCorporate?: boolean;               // Whether this is a corporate account
-  isAdmin?: boolean;                   // Whether this user is a platform admin
-  status?: "active" | "suspended" | "premium"; // User's account status
-  createdAt?: string;                  // When the user account was created
+  id: string;
+  name: string;
+  email: string;
+  password?: string; // Only used internally
+  createdAt?: string;
+  hasCompletedPersonalityTest: boolean;
+  personalityTags?: string[];
+  country?: string;
+  status: "active" | "premium" | "suspended";
+  isAdmin?: boolean;
 }
 
-// AuthContext type definition
+// Define context type
 interface AuthContextType {
-  user: User | null;                   // Current user data or null if not logged in
-  isAuthenticated: boolean;            // Whether the user is authenticated
-  hasCompletedPersonalityTest: boolean; // Whether the user has completed the personality test
-  login: (email: string, password: string) => Promise<void>; // Function to log in
-  register: (name: string, email: string, password: string, country?: string) => Promise<void>; // Function to register
-  socialLogin: (provider: "google" | "facebook" | "twitter") => Promise<void>; // Function for social login
-  phoneLogin: (phoneNumber: string, verificationCode: string) => Promise<void>; // Function for phone login
-  logout: () => void;                  // Function to log out
-  completePersonalityTest: (personalityTags: string[]) => void; // Function to save personality test results
-  updateUserProfile: (data: Partial<User>) => Promise<void>; // Function to update user profile
-  upgradeTier: (tier: "premium" | "enterprise") => Promise<void>; // Function to upgrade subscription tier
-  isAdmin: boolean;                    // Whether the current user is a platform admin
-  getAllUsers: () => User[];           // Function to get all registered users (for admin)
+  isAuthenticated: boolean;
+  user: User | null;
+  isAdmin: boolean;
+  hasCompletedPersonalityTest: boolean;
+  login: (email: string, password: string) => boolean;
+  register: (name: string, email: string, password: string) => boolean;
+  logout: () => void;
+  completePersonalityTest: (personalityTags: string[]) => void;
+  getAllUsers: () => User[];
+  updateUserProfile: (updates: Partial<User>) => void;
+  closeAccount: () => void;
+  toggleEventFavorite: (eventId: string) => void;
+  getFavoriteEvents: () => string[];
 }
 
-// Create the context
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-/**
- * AuthProvider component to wrap the application and provide auth state
- */
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // State for the current user
-  const [user, setUser] = useState<User | null>(null);
-  // Loading state for initial auth check
-  const [isLoading, setIsLoading] = useState(true);
-  // Admin status
-  const [isAdmin, setIsAdmin] = useState(false);
-  
-  /**
-   * Check for existing user session on load
-   * In a real app, this would verify a JWT token with the backend
-   */
-  useEffect(() => {
-    // First check local storage for saved user data
-    const storedUser = localStorage.getItem("gathr_user");
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-        
-        // Check if this is an admin account
-        if (parsedUser.isAdmin) {
-          setIsAdmin(true);
-        }
-        
-        // In a real app, we would verify the token with the backend here
-        // and refresh the user data from the database
-      } catch (e) {
-        localStorage.removeItem("gathr_user");
-      }
-    }
-    setIsLoading(false);
-  }, []);
-  
-  /**
-   * Save user data to local storage whenever it changes
-   */
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem("gathr_user", JSON.stringify(user));
-    }
-  }, [user]);
-  
-  /**
-   * Login function - authenticates user credentials
-   * In a real app, this would call a backend API endpoint
-   */
-  const login = async (email: string, password: string) => {
-    try {
-      // Simulating API call - in a real app, this would call the gathrApi.auth.login
-      // Wait for backend to be implemented
-      if (email === "demo@gathr.com" && password === "password") {
-        const demoUser: User = {
-          id: "1",
-          name: "Demo User",
-          email: "demo@gathr.com",
-          hasCompletedPersonalityTest: false,
-          personalityTags: [],
-          country: "United States",
-          authProvider: "email",
-          tier: "free",
-          status: "active",
-          createdAt: "2023-01-15"
-        };
-        setUser(demoUser);
-        
-        toast({
-          title: "Login successful",
-          description: "Welcome to Gathr!",
-        });
-      } else if (email === "admin@gathr.com" && password === "adminpass") {
-        // Demo platform owner/admin account
-        const adminUser: User = {
-          id: "admin1",
-          name: "Admin User",
-          email: "admin@gathr.com",
-          hasCompletedPersonalityTest: true,
-          personalityTags: ["analytical", "organized"],
-          country: "United States",
-          authProvider: "email",
-          tier: "enterprise",
-          isAdmin: true,
-          status: "active",
-          createdAt: "2023-01-01"
-        };
-        setUser(adminUser);
-        setIsAdmin(true);
-        
-        toast({
-          title: "Admin login successful",
-          description: "Welcome to the Gathr admin platform!",
-        });
-      } else {
-        // Check if this is a stored account
-        const storedAccounts = localStorage.getItem("gathr_accounts") || "[]";
-        const accounts = JSON.parse(storedAccounts);
-        
-        const foundAccount = accounts.find((acc: any) => 
-          acc.email === email && acc.password === password
-        );
-        
-        if (foundAccount) {
-          // Clone the account without the password field for security
-          const { password, ...userWithoutPassword } = foundAccount;
-          setUser(userWithoutPassword);
-          
-          if (userWithoutPassword.isAdmin) {
-            setIsAdmin(true);
-          }
-          
-          toast({
-            title: "Login successful",
-            description: "Welcome back to Gathr!",
-          });
-        } else {
-          throw new Error("Invalid credentials");
-        }
-      }
-    } catch (error) {
-      toast({
-        title: "Login failed",
-        description: error instanceof Error ? error.message : "An error occurred",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-  
-  /**
-   * Register function - creates a new user account
-   * In a real app, this would call a backend API endpoint
-   */
-  const register = async (name: string, email: string, password: string, country?: string) => {
-    try {
-      // Check if account already exists
-      const storedAccounts = localStorage.getItem("gathr_accounts") || "[]";
-      const accounts = JSON.parse(storedAccounts);
-      
-      if (accounts.some((acc: any) => acc.email === email)) {
-        throw new Error("Email already registered");
-      }
-      
-      // Create new user
-      const newUser: User = {
-        id: Date.now().toString(),
-        name,
-        email,
-        hasCompletedPersonalityTest: false,
-        personalityTags: [],
-        country: country || "United States", // Default country if not specified
-        authProvider: "email",
-        tier: "free", // Default to free tier
-        status: "active",
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-      
-      // Store in accounts list (with password) for future logins
-      const accountToStore = { ...newUser, password };
-      localStorage.setItem("gathr_accounts", JSON.stringify([...accounts, accountToStore]));
-      
-      // Set as current user (without password)
-      setUser(newUser);
-      
-      toast({
-        title: "Registration successful",
-        description: "Welcome to Gathr!",
-      });
-    } catch (error) {
-      toast({
-        title: "Registration failed",
-        description: error instanceof Error ? error.message : "An error occurred",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-  
-  /**
-   * Social login function - authenticates with social media providers
-   * In a real app, this would use OAuth with the provider
-   */
-  const socialLogin = async (provider: "google" | "facebook" | "twitter") => {
-    try {
-      // Simulate social login
-      const socialUser: User = {
-        id: `${provider}_${Date.now()}`,
-        name: `${provider.charAt(0).toUpperCase() + provider.slice(1)} User`,
-        email: `user@${provider}.example.com`,
-        hasCompletedPersonalityTest: false,
-        personalityTags: [],
-        authProvider: provider,
-        tier: "free",
-        status: "active",
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-      
-      // Store in accounts list
-      const storedAccounts = localStorage.getItem("gathr_accounts") || "[]";
-      const accounts = JSON.parse(storedAccounts);
-      
-      // Don't store the same account twice
-      if (!accounts.some((acc: any) => acc.email === socialUser.email)) {
-        localStorage.setItem("gathr_accounts", JSON.stringify([...accounts, socialUser]));
-      }
-      
-      setUser(socialUser);
-      
-      toast({
-        title: "Social login successful",
-        description: `You've logged in with ${provider.charAt(0).toUpperCase() + provider.slice(1)}!`,
-      });
-    } catch (error) {
-      toast({
-        title: "Social login failed",
-        description: error instanceof Error ? error.message : "An error occurred",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-  
-  /**
-   * Phone login function - authenticates with phone number and verification code
-   * In a real app, this would send a verification code via SMS
-   */
-  const phoneLogin = async (phoneNumber: string, verificationCode: string) => {
-    try {
-      // In a real app, verify the code with a backend service
-      if (verificationCode !== "123456") {
-        throw new Error("Invalid verification code");
-      }
-      
-      const phoneUser: User = {
-        id: `phone_${Date.now()}`,
-        name: "Phone User",
-        email: `${phoneNumber.replace(/\D/g, '')}@phone.gathr.com`, // Generate email from phone
-        phoneNumber,
-        hasCompletedPersonalityTest: false,
-        personalityTags: [],
-        authProvider: "phone",
-        tier: "free",
-        status: "active",
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-      
-      // Store in accounts list
-      const storedAccounts = localStorage.getItem("gathr_accounts") || "[]";
-      const accounts = JSON.parse(storedAccounts);
-      
-      // Don't store the same account twice
-      if (!accounts.some((acc: any) => acc.email === phoneUser.email)) {
-        localStorage.setItem("gathr_accounts", JSON.stringify([...accounts, phoneUser]));
-      }
-      
-      setUser(phoneUser);
-      
-      toast({
-        title: "Phone login successful",
-        description: "You've logged in with your phone number!",
-      });
-    } catch (error) {
-      toast({
-        title: "Phone login failed",
-        description: error instanceof Error ? error.message : "An error occurred",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-  
-  /**
-   * Logout function - clears the current user session
-   */
-  const logout = () => {
-    setUser(null);
-    setIsAdmin(false);
-    localStorage.removeItem("gathr_user");
-    
-    toast({
-      title: "Logged out",
-      description: "You have been logged out successfully",
-    });
-  };
-  
-  /**
-   * Complete personality test function - updates user profile with personality tags
-   * In a real app, this would save the results to a backend API
-   */
-  const completePersonalityTest = (personalityTags: string[]) => {
-    if (user) {
-      const updatedUser = {
-        ...user,
-        hasCompletedPersonalityTest: personalityTags.length > 0,
-        personalityTags,
-      };
-      setUser(updatedUser);
-      
-      // Update in stored accounts as well
-      const storedAccounts = localStorage.getItem("gathr_accounts") || "[]";
-      const accounts = JSON.parse(storedAccounts);
-      
-      const updatedAccounts = accounts.map((account: any) => {
-        if (account.email === user.email) {
-          return {
-            ...account,
-            hasCompletedPersonalityTest: personalityTags.length > 0,
-            personalityTags
-          };
-        }
-        return account;
-      });
-      
-      localStorage.setItem("gathr_accounts", JSON.stringify(updatedAccounts));
-      
-      toast({
-        title: "Personality test completed",
-        description: "Your profile has been updated with your personality traits",
-      });
-    }
-  };
-  
-  /**
-   * Update user profile function - updates user data
-   * In a real app, this would save to a backend API
-   */
-  const updateUserProfile = async (data: Partial<User>) => {
-    if (user) {
-      const updatedUser = {
-        ...user,
-        ...data
-      };
-      setUser(updatedUser);
-      
-      // Update in stored accounts as well
-      const storedAccounts = localStorage.getItem("gathr_accounts") || "[]";
-      const accounts = JSON.parse(storedAccounts);
-      
-      const updatedAccounts = accounts.map((account: any) => {
-        if (account.email === user.email) {
-          return { ...account, ...data };
-        }
-        return account;
-      });
-      
-      localStorage.setItem("gathr_accounts", JSON.stringify(updatedAccounts));
-      
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully",
-      });
-    }
-  };
-  
-  /**
-   * Upgrade subscription tier function
-   * In a real app, this would process payment and update subscription in database
-   */
-  const upgradeTier = async (tier: "premium" | "enterprise") => {
-    if (user) {
-      const updatedUser = {
-        ...user,
-        tier
-      };
-      setUser(updatedUser);
-      
-      // Update in stored accounts as well
-      const storedAccounts = localStorage.getItem("gathr_accounts") || "[]";
-      const accounts = JSON.parse(storedAccounts);
-      
-      const updatedAccounts = accounts.map((account: any) => {
-        if (account.email === user.email) {
-          return { ...account, tier };
-        }
-        return account;
-      });
-      
-      localStorage.setItem("gathr_accounts", JSON.stringify(updatedAccounts));
-      
-      toast({
-        title: "Subscription upgraded",
-        description: `You've successfully upgraded to the ${tier} tier!`,
-      });
-    }
-  };
-
-  /**
-   * Get all registered users (for admin)
-   */
-  const getAllUsers = () => {
-    // Get from local storage
-    const storedAccounts = localStorage.getItem("gathr_accounts") || "[]";
-    const accounts = JSON.parse(storedAccounts);
-    
-    // Add demo users if not already there
-    const demoUser: User = {
-      id: "1",
-      name: "Demo User",
-      email: "demo@gathr.com",
-      hasCompletedPersonalityTest: false,
-      personalityTags: [],
-      country: "United States",
-      authProvider: "email",
-      tier: "free",
-      status: "active",
-      createdAt: "2023-01-15"
-    };
-    
-    const adminUser: User = {
-      id: "admin1",
-      name: "Admin User",
-      email: "admin@gathr.com",
-      hasCompletedPersonalityTest: true,
-      personalityTags: ["analytical", "organized"],
-      country: "United States",
-      authProvider: "email",
-      tier: "enterprise",
-      isAdmin: true,
-      status: "active",
-      createdAt: "2023-01-01"
-    };
-    
-    // Remove passwords from returned accounts
-    const accountsWithoutPasswords = accounts.map((acc: any) => {
-      const { password, ...userWithoutPassword } = acc;
-      return {
-        ...userWithoutPassword,
-        status: userWithoutPassword.status || 'active'
-      };
-    });
-    
-    // Add demo users if not already in the list
-    const allUsers = accountsWithoutPasswords.slice();
-    
-    if (!allUsers.some(u => u.email === demoUser.email)) {
-      allUsers.push(demoUser);
-    }
-    
-    if (!allUsers.some(u => u.email === adminUser.email)) {
-      allUsers.push(adminUser);
-    }
-    
-    return allUsers;
-  };
-
-  // Create the context value object
-  const value = {
-    user,
-    isAuthenticated: !!user,
-    hasCompletedPersonalityTest: user?.hasCompletedPersonalityTest || false,
-    login,
-    register,
-    socialLogin,
-    phoneLogin,
-    logout,
-    completePersonalityTest,
-    updateUserProfile,
-    upgradeTier,
-    isAdmin,
-    getAllUsers
-  };
-
-  // Show loading state while checking authentication
-  if (isLoading) {
-    return <div>Loading authentication...</div>;
+// Initial mock users with encrypted passwords
+const initialUsers: User[] = [
+  {
+    id: "1",
+    name: "Admin User",
+    email: "admin@example.com",
+    password: "admin123", // In a real app, this would be encrypted
+    createdAt: "2024-01-15",
+    hasCompletedPersonalityTest: true,
+    personalityTags: ["tech", "music", "outdoors"],
+    country: "United States",
+    status: "active",
+    isAdmin: true
+  },
+  {
+    id: "2",
+    name: "John Doe",
+    email: "you@example.com",
+    password: "password123", // In a real app, this would be encrypted
+    createdAt: "2024-02-20",
+    hasCompletedPersonalityTest: true,
+    personalityTags: ["food", "sports", "art"],
+    country: "Canada",
+    status: "active",
+    isAdmin: false
   }
+];
 
-  // Provide the auth context to the entire app
+// Create the context with default values
+export const AuthContext = createContext<AuthContextType>({
+  isAuthenticated: false,
+  user: null,
+  isAdmin: false,
+  hasCompletedPersonalityTest: false,
+  login: () => false,
+  register: () => false,
+  logout: () => {},
+  completePersonalityTest: () => {},
+  getAllUsers: () => [],
+  updateUserProfile: () => {},
+  closeAccount: () => {},
+  toggleEventFavorite: () => {},
+  getFavoriteEvents: () => [],
+});
+
+// Provider component that wraps the app and provides auth context
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  // Check local storage for saved users and current user
+  const getSavedUsers = (): User[] => {
+    const usersJson = localStorage.getItem("users");
+    if (usersJson) {
+      return JSON.parse(usersJson);
+    }
+    return initialUsers;
+  };
+
+  const getSavedUser = (): User | null => {
+    const userJson = localStorage.getItem("currentUser");
+    return userJson ? JSON.parse(userJson) : null;
+  };
+
+  // State to track authentication status and user info
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!getSavedUser());
+  const [user, setUser] = useState<User | null>(getSavedUser());
+  const [users, setUsers] = useState<User[]>(getSavedUsers());
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    const saved = localStorage.getItem("favoriteEvents");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // Save users to local storage whenever they change
+  useEffect(() => {
+    localStorage.setItem("users", JSON.stringify(users));
+  }, [users]);
+
+  // Save favorite events to local storage
+  useEffect(() => {
+    localStorage.setItem("favoriteEvents", JSON.stringify(favorites));
+  }, [favorites]);
+
+  // Login function
+  const login = (email: string, password: string): boolean => {
+    const foundUser = users.find(u => u.email === email && u.password === password);
+    
+    if (foundUser) {
+      // Create a copy without the password for storage
+      const { password, ...userWithoutPassword } = foundUser;
+      setUser(userWithoutPassword);
+      setIsAuthenticated(true);
+      localStorage.setItem("currentUser", JSON.stringify(userWithoutPassword));
+      return true;
+    }
+    
+    return false;
+  };
+
+  // Register function
+  const register = (name: string, email: string, password: string): boolean => {
+    // Check if user already exists
+    if (users.some(u => u.email === email)) {
+      return false;
+    }
+    
+    // Create new user
+    const newUser: User = {
+      id: (users.length + 1).toString(),
+      name,
+      email,
+      password,
+      createdAt: new Date().toISOString(),
+      hasCompletedPersonalityTest: false,
+      status: "active",
+      personalityTags: []
+    };
+    
+    // Add to users list
+    const updatedUsers = [...users, newUser];
+    setUsers(updatedUsers);
+    
+    // Auto login after registration
+    const { password: _, ...userWithoutPassword } = newUser;
+    setUser(userWithoutPassword);
+    setIsAuthenticated(true);
+    localStorage.setItem("currentUser", JSON.stringify(userWithoutPassword));
+    localStorage.setItem("users", JSON.stringify(updatedUsers));
+    
+    return true;
+  };
+
+  // Logout function
+  const logout = () => {
+    setIsAuthenticated(false);
+    setUser(null);
+    localStorage.removeItem("currentUser");
+  };
+
+  // Complete personality test
+  const completePersonalityTest = (personalityTags: string[]) => {
+    if (!user) return;
+    
+    const updatedUser = { 
+      ...user, 
+      hasCompletedPersonalityTest: true, 
+      personalityTags 
+    };
+    
+    setUser(updatedUser);
+    
+    // Also update in the users array
+    const updatedUsers = users.map(u => 
+      u.id === user.id ? { ...u, hasCompletedPersonalityTest: true, personalityTags } : u
+    );
+    
+    setUsers(updatedUsers);
+    
+    // Update localStorage
+    localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+    localStorage.setItem("users", JSON.stringify(updatedUsers));
+  };
+
+  // Get all users for admin
+  const getAllUsers = (): User[] => {
+    return users;
+  };
+
+  // Update user profile
+  const updateUserProfile = (updates: Partial<User>) => {
+    if (!user) return;
+    
+    const updatedUser = { ...user, ...updates };
+    setUser(updatedUser);
+    
+    // Update in users array
+    const updatedUsers = users.map(u => 
+      u.id === user.id ? { ...u, ...updates } : u
+    );
+    
+    setUsers(updatedUsers);
+    
+    // Update localStorage
+    localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+    localStorage.setItem("users", JSON.stringify(updatedUsers));
+  };
+
+  // Close account
+  const closeAccount = () => {
+    if (!user) return;
+    
+    // Remove user from users list
+    const updatedUsers = users.filter(u => u.id !== user.id);
+    setUsers(updatedUsers);
+    
+    // Update localStorage
+    localStorage.setItem("users", JSON.stringify(updatedUsers));
+    
+    // Logout
+    logout();
+  };
+
+  // Toggle event as favorite
+  const toggleEventFavorite = (eventId: string) => {
+    if (favorites.includes(eventId)) {
+      setFavorites(favorites.filter(id => id !== eventId));
+    } else {
+      setFavorites([...favorites, eventId]);
+    }
+  };
+
+  // Get favorite events
+  const getFavoriteEvents = () => {
+    return favorites;
+  };
+
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{
+      isAuthenticated,
+      user,
+      isAdmin: user?.isAdmin || false,
+      hasCompletedPersonalityTest: user?.hasCompletedPersonalityTest || false,
+      login,
+      register,
+      logout,
+      completePersonalityTest,
+      getAllUsers,
+      updateUserProfile,
+      closeAccount,
+      toggleEventFavorite,
+      getFavoriteEvents,
+    }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-/**
- * Custom hook to use the auth context
- * This simplifies consuming the context in components
- */
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-};
+// Custom hook for using auth context
+export const useAuth = () => useContext(AuthContext);

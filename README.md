@@ -1,104 +1,66 @@
 
-# Gathr Event Platform
+# Gathr - Social Event Matchmaking App
 
-Gathr is a social event platform that connects people through shared interests and events. The app matches users based on personality types and interests, helping them discover events and make meaningful connections.
+Gathr is an AI-driven event platform that connects young professionals through curated events and personality-based matching.
 
 ## Features
 
-- **Event Discovery**: Find events based on your personality traits and location
-- **Event Booking & Payment**: Book events with integrated payment functionality and refund policy
-- **Personality Matching**: Get matched with events and people based on your personality test
-- **Social Circle**: Connect with like-minded individuals
-- **Event Creation**: Create and manage your own events
-- **Admin Dashboard**: Platform management for administrators
-- **Customizable Theme**: Change background colors to suit your preferences
+### User Experience
+- **Personalized Event Discovery**: Browse events based on your personality profile and preferences
+- **Event Booking**: Seamlessly book tickets to events with confirmation and refund options
+- **Favorites**: Save events you're interested in for later viewing
+- **Tickets Management**: View all your booked events in one place
+- **User Profiles**: Customize your profile and preferences
+- **Account Management**: Update personal information, change password, or close account
 
-## Event Features
-- **Price Display**: Clear pricing for all events
-- **Time Details**: View start and end times for better planning
-- **Carousel Navigation**: Browse events with convenient left/right navigation
-- **Expandable Sections**: Show more events with "View all" / "Collapse" functionality
-- **Refund Policy**: Full refunds within 24 hours of booking
-- **Location Information**: View event locations before booking
-- **Event Images**: Visual representation for all events
+### Event Features
+- **Event Details**: View comprehensive information about each event
+- **Attendee Matching**: See personality match scores with other event attendees
+- **Location Information**: Find events near you with detailed location data
+- **Social Sharing**: Share events with friends easily
 
-## Tech Stack
+### Admin Dashboard
+- **User Management**: View and manage all platform users
+- **Analytics**: See platform usage statistics and growth metrics
+- **Security Monitoring**: Monitor and respond to security threats
 
-- React with TypeScript
-- React Router for navigation
-- Tailwind CSS for styling
-- shadcn/ui for UI components
-- date-fns for date formatting
-- lucide-react for icons
-- React Query for data fetching
-- Sonner for toast notifications
+## Pages
+- **Home**: Personalized feed showing booked events, nearby events, and recommended events
+- **Explore**: Discover new events by category, location, or popularity
+- **Favorites**: View all events you've marked as favorites
+- **Tickets**: Access all your booked events
+- **Profile**: Manage your account settings, preferences, and personal information
+- **Event Details**: View comprehensive information about a specific event
+- **Admin Dashboard**: Platform management tools for administrators
+
+## Technology Stack
+- React
+- TypeScript
+- TailwindCSS
+- shadcn/ui components
+- React Router
+- React Hook Form
+- Lucide icons
+
+## Screenshots
+![Home Screen](path-to-home-screenshot.png)
+![Event Detail](path-to-detail-screenshot.png)
 
 ## Getting Started
 
 ### Prerequisites
-
-- Node.js 16+
+- Node.js 14.0 or later
 - npm or yarn
 
 ### Installation
-
 1. Clone the repository
-2. Install dependencies:
-   ```bash
-   npm install
-   # or
-   yarn install
-   ```
-3. Start the development server:
-   ```bash
-   npm run dev
-   # or
-   yarn dev
-   ```
-
-## Component Structure
-
-- **Layouts**: Main layout structure components
-  - `MainLayout.tsx`: Layout for authenticated pages with bottom navigation
-  - `AuthLayout.tsx`: Layout for authentication pages
-
-- **Pages**: Main application views
-  - `FindEvents.tsx`: Event discovery page
-  - `UpcomingEvents.tsx`: User's booked events
-  - `CreateEvent.tsx`: Event creation form
-  - `GathrCircle.tsx`: Social connections
-  - `Profile.tsx`: User profile settings
-  - `AdminDashboard.tsx`: Admin controls
-
-- **Components**: Reusable UI components
-  - `EventCard.tsx`: Card display for events
-  - `EventDetailDialog.tsx`: Detailed event information and booking
-  - `BottomNavbar.tsx`: Mobile navigation bar
-  - `Header.tsx`: Top application header
-  - `ThemeToggle.tsx`: Background color customization
-
-## Known Issues
-
-- **Admin Navigation**: Use the "Back to App" button in the header to return to the main app from admin page.
-- **Event Booking**: Currently implemented as a client-side state only. In a production app, this would connect to an API.
-- **Payments**: Payment simulation is included, but it would require a real payment processor integration in production.
-
-## Theme Customization
-
-The app supports custom background colors with several preset options including black, white, dark gray, navy, and dark purple. Access the theme toggle from the top-right corner of the main pages.
-
-## User Accounts
-
-The app stores registered user accounts locally, allowing you to log back in after closing the website. Admin users can view and manage all registered users through the Admin Dashboard.
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/my-feature`)
-3. Commit your changes (`git commit -m 'Add my feature'`)
-4. Push to the branch (`git push origin feature/my-feature`)
-5. Open a Pull Request
+2. Install dependencies: `npm install`
+3. Start the development server: `npm run dev`
 
 ## License
-
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgements
+- Design inspiration from modern mobile-first applications
+- shadcn/ui for the beautiful component library
+- The React team and community for the amazing tools and libraries

@@ -7,7 +7,7 @@
  * The current route is highlighted with the app's primary coral color.
  */
 import { useNavigate, useLocation } from "react-router-dom";
-import { Search, CalendarPlus, CalendarCheck, UserRound, Users } from "lucide-react";
+import { Home, Search, Heart, Ticket, UserRound } from "lucide-react";
 
 const BottomNavbar = () => {
   // Hook for programmatic navigation
@@ -19,24 +19,24 @@ const BottomNavbar = () => {
   // Navigation items with their labels, routes and icons
   const navItems = [
     {
-      name: "Find Events",
-      path: "/find-events",
+      name: "Home",
+      path: "/find-events", // Keep the same route for now
+      icon: <Home className="h-6 w-6" />,
+    },
+    {
+      name: "Explore",
+      path: "/explore",
       icon: <Search className="h-6 w-6" />,
     },
     {
-      name: "Create Event",
-      path: "/create-event",
-      icon: <CalendarPlus className="h-6 w-6" />,
+      name: "Favorites",
+      path: "/favorites",
+      icon: <Heart className="h-6 w-6" />,
     },
     {
-      name: "Upcoming",
-      path: "/upcoming-events",
-      icon: <CalendarCheck className="h-6 w-6" />,
-    },
-    {
-      name: "Circle",
-      path: "/gathr-circle",
-      icon: <Users className="h-6 w-6" />,
+      name: "Tickets",
+      path: "/tickets",
+      icon: <Ticket className="h-6 w-6" />,
     },
     {
       name: "Profile",

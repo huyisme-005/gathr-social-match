@@ -32,6 +32,10 @@ import Profile from "./pages/Profile";
 import GathrCircle from "./pages/GathrCircle";
 import Subscription from "./pages/Subscription";
 import AdminDashboard from "./pages/AdminDashboard";
+import ExplorePage from "./pages/ExplorePage";
+import FavoritesPage from "./pages/FavoritesPage";
+import TicketsPage from "./pages/TicketsPage";
+import EventDetail from "./pages/EventDetail";
 
 // Context
 import { AuthProvider } from "./contexts/AuthContext";
@@ -102,6 +106,38 @@ const App: React.FC = () => (
                   element={
                     <ProtectedRoute>
                       <FindEvents />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/explore" 
+                  element={
+                    <ProtectedRoute>
+                      <ExplorePage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/favorites" 
+                  element={
+                    <ProtectedRoute>
+                      <FavoritesPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/tickets" 
+                  element={
+                    <ProtectedRoute>
+                      <TicketsPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/event/:id" 
+                  element={
+                    <ProtectedRoute>
+                      <EventDetail />
                     </ProtectedRoute>
                   } 
                 />

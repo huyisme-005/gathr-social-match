@@ -1,26 +1,23 @@
 
-import { Outlet, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
-import BottomNavbar from "../components/BottomNavbar";
+/**
+ * MainLayout Component
+ * 
+ * This component provides the common layout for all main application pages.
+ * It includes:
+ * - Header component at the top
+ * - Main content area with proper padding
+ * - BottomNavbar component for mobile navigation
+ * - Automatic padding to accommodate the bottom navbar
+ */
+import { Outlet } from "react-router-dom";
 import Header from "../components/Header";
-import { useAuth } from "../contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import BottomNavbar from "../components/BottomNavbar";
 
 const MainLayout = () => {
-  const { isAuthenticated, user } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-  
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("/login");
-    }
-  }, [isAuthenticated, navigate]);
-
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="app-container">
       <Header />
-      <main className="flex-1 container mx-auto pb-16 px-4 pt-4">
+      <main className="flex-1 p-4 pb-24">
         <Outlet />
       </main>
       <BottomNavbar />

@@ -1,489 +1,211 @@
+
 /**
- * FindEvents Page
+ * FindEvents Page (Home)
  * 
  * This component is the main event discovery page of the application.
  * It displays a list of events with infinite scrolling, search functionality,
  * and filtering options. Events are recommended based on the user's personality.
  */
-import { useState, useEffect, useRef } from "react";
-import { useInView } from "react-intersection-observer";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Search, Filter, Calendar, MapPin, Clock, ChevronRight, ChevronLeft } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { Bell } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useAuth } from "../contexts/AuthContext";
-import EventFilterDialog from "../components/EventFilterDialog";
-import EventCard from "../components/EventCard";
-import EventDetailDialog from "../components/EventDetailDialog";
-import { mockEvents } from "../data/mockEvents";
-import { Event } from "../types/event";
-import { ThemeToggle } from "../components/ThemeToggle";
-import { 
-  Carousel, 
-  CarouselContent, 
-  CarouselItem, 
-  CarouselNext, 
-  CarouselPrevious 
-} from "@/components/ui/carousel";
+import { Button } from "@/components/ui/button";
+import EventCard from "@/components/EventCard";
+import { Event } from "@/types/event";
+import { mockEvents } from "@/data/mockEvents";
 
 const FindEvents = () => {
-  // State for all events data
-  const [events, setEvents] = useState<Event[]>([]);
-  
-  // State for filtered events (after search and filter applied)
-  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
-  
-  // State for booked events
   const [bookedEvents, setBookedEvents] = useState<Event[]>([]);
-  
-  // State for more events (national)
-  const [nationalEvents, setNationalEvents] = useState<Event[]>([]);
-  
-  // Loading state for initial data fetching
+  const [nearbyEvents, setNearbyEvents] = useState<Event[]>([]);
+  const [moreEvents, setMoreEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // State for search input value
-  const [searchTerm, setSearchTerm] = useState("");
-  
-  // Current page number for infinite scrolling
-  const [page, setPage] = useState(1);
-  
-  // State to control filter dialog visibility
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  
-  // State for expanded sections
-  const [expandedSections, setExpandedSections] = useState({
-    yourTickets: false,
-    exploreNearby: false,
-    moreEvents: false
-  });
-  
-  // State for active filters
-  const [activeFilters, setActiveFilters] = useState({
-    categories: [] as string[],  // Selected event categories
-    date: null as Date | null,   // Selected date filter
-    distance: 10,                // Selected distance radius in km
-  });
-  
-  // State for view mode
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  
-  // New state for selected event in More Events section
-  const [selectedMoreEvent, setSelectedMoreEvent] = useState<Event | null>(null);
-  const [isMoreEventDetailOpen, setIsMoreEventDetailOpen] = useState(false);
-  
-  // Get current user data from auth context
   const { user } = useAuth();
+  const navigate = useNavigate();
   
-  // Setup intersection observer for infinite scrolling
-  const { ref, inView } = useInView();
-  
-  /**
-   * Initial data loading
-   * In a real app, this would fetch events from an API
-   */
   useEffect(() => {
-    // Simulating API call delay
+    // Simulating API call
     setTimeout(() => {
       // Add price and time details to events
       const enhancedEvents = mockEvents.map(event => ({
         ...event,
-        price: Math.floor(Math.random() * 100) + 10, // Random price between $10-$110
+        price: Math.floor(Math.random() * 100) + 10,
         startTime: `${event.time}`,
-        endTime: `${parseInt(event.time.split(':')[0]) + 2}:${event.time.split(':')[1]}`, // 2 hours after start
-        imageUrl: event.id === "1" ? "https://images.unsplash.com/photo-1581092160607-ee23481e1f5b" : event.imageUrl
+        endTime: `${parseInt(event.time.split(':')[0]) + 2}:${event.time.split(':')[1]}`,
       }));
       
-      setEvents(enhancedEvents);
-      setFilteredEvents(enhancedEvents);
-      
-      // Get some random events for the booked section
+      // Get booked events (first 3 for demo)
       setBookedEvents(enhancedEvents.slice(0, 3));
       
-      // Get some random events for the national section
-      // Adding more events to the national section
-      const moreNationalEvents = [
-        ...enhancedEvents.slice(3, 9),
-        ...enhancedEvents.map(evt => ({ 
-          ...evt, 
-          id: `${evt.id}-copy`, 
-          title: `${evt.title} ${Math.floor(Math.random() * 100)}`,
-          price: Math.floor(Math.random() * 100) + 10,
-          imageUrl: evt.imageUrl || getFallbackImage(evt.title)
-        })).slice(0, 6)
-      ];
+      // Get nearby events
+      setNearbyEvents(enhancedEvents.slice(3, 7));
       
-      setNationalEvents(moreNationalEvents);
+      // Get more events
+      setMoreEvents(enhancedEvents.slice(7, 10));
       
       setIsLoading(false);
     }, 1000);
   }, []);
   
-  // Function to get fallback image based on event title
-  const getFallbackImage = (title: string) => {
-    const techImages = [
-      "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b",
-      "https://images.unsplash.com/photo-1518770660439-4636190af475",
-      "https://images.unsplash.com/photo-1461749280684-dccba630e2f6",
-    ];
-    
-    const natureImages = [
-      "https://images.unsplash.com/photo-1472396961693-142e6e269027",
-      "https://images.unsplash.com/photo-1433086966358-54859d0ed716",
-      "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07",
-    ];
-    
-    const socialImages = [
-      "https://images.unsplash.com/photo-1527576539890-dfa815648363",
-      "https://images.unsplash.com/photo-1488972685288-c3fd157d7c7a",
-      "https://images.unsplash.com/photo-1487958449943-2429e8be8625",
-    ];
-    
-    // Determine image category based on title keywords
-    if (title.toLowerCase().includes("tech") || title.toLowerCase().includes("ai") || title.toLowerCase().includes("code")) {
-      return techImages[Math.floor(Math.random() * techImages.length)];
-    } else if (title.toLowerCase().includes("hike") || title.toLowerCase().includes("outdoor") || title.toLowerCase().includes("park")) {
-      return natureImages[Math.floor(Math.random() * natureImages.length)];
-    } else {
-      return socialImages[Math.floor(Math.random() * socialImages.length)];
-    }
+  const handleEventClick = (eventId: string) => {
+    navigate(`/event/${eventId}`);
   };
 
-  /**
-   * Handle infinite scrolling when user reaches bottom of the list
-   */
-  useEffect(() => {
-    if (inView && !isLoading) {
-      // In a real app, this would fetch the next page of events from the API
-      setPage((prevPage) => prevPage + 1);
-      
-      // For demo, we're just adding the same events again
-      setEvents((prevEvents) => [...prevEvents, ...mockEvents]);
-      
-      // Apply current filters to the new events
-      handleSearch(searchTerm);
-    }
-  }, [inView]);
-  
-  /**
-   * Filter events based on search term and active filters
-   */
-  const handleSearch = (term: string) => {
-    setSearchTerm(term);
-    
-    // If no filters active, show all events
-    if (!term && !activeFilters.categories.length && !activeFilters.date) {
-      setFilteredEvents(events);
-      return;
-    }
-    
-    // Apply filters to events
-    const filtered = events.filter((event) => {
-      // Check if event matches search term in title or description
-      const matchesSearch = term
-        ? event.title.toLowerCase().includes(term.toLowerCase()) ||
-          event.description.toLowerCase().includes(term.toLowerCase())
-        : true;
-        
-      // Check if event belongs to any of the selected categories
-      const matchesCategory = activeFilters.categories.length
-        ? activeFilters.categories.some((cat) => event.categories.includes(cat))
-        : true;
-        
-      // Add more filter logic here as needed
-        
-      return matchesSearch && matchesCategory;
-    });
-    
-    setFilteredEvents(filtered);
-  };
-  
-  /**
-   * Apply filters from the filter dialog
-   */
-  const applyFilters = (filters: typeof activeFilters) => {
-    setActiveFilters(filters);
-    
-    // Apply both search term and new filters
-    const filtered = events.filter((event) => {
-      const matchesSearch = searchTerm
-        ? event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          event.description.toLowerCase().includes(searchTerm.toLowerCase())
-        : true;
-        
-      const matchesCategory = filters.categories.length
-        ? filters.categories.some((cat) => event.categories.includes(cat))
-        : true;
-        
-      // Add more filter logic here as needed
-        
-      return matchesSearch && matchesCategory;
-    });
-    
-    setFilteredEvents(filtered);
-  };
-
-  /**
-   * Sort events based on user's personality traits
-   * This increases match scores for events with categories matching user's traits
-   */
-  useEffect(() => {
-    if (user?.personalityTags?.length) {
-      const personalityTags = user.personalityTags;
-      
-      // Sort events by relevance to user's personality
-      const sortedEvents = [...filteredEvents].sort((a, b) => {
-        // Count how many categories match the user's personality tags
-        const aMatches = a.categories.filter((cat) => personalityTags.includes(cat)).length;
-        const bMatches = b.categories.filter((cat) => personalityTags.includes(cat)).length;
-        return bMatches - aMatches; // Higher matches come first
-      });
-      
-      setFilteredEvents(sortedEvents);
-    }
-  }, [user?.personalityTags, events]);
-
-  /**
-   * Toggle the expanded state of a section
-   */
-  const toggleSectionExpanded = (section: 'yourTickets' | 'exploreNearby' | 'moreEvents') => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }));
-  };
-  
-  /**
-   * Handle click on More Event card
-   */
-  const handleMoreEventClick = (event: Event) => {
-    setSelectedMoreEvent(event);
-    setIsMoreEventDetailOpen(true);
-  };
-  
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Header with greeting and notification */}
       <div className="flex justify-between items-center">
-        <h1 className="text-xl font-medium">Explore Events</h1>
-        <ThemeToggle />
-      </div>
-      
-      {/* Search and filter controls */}
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search events..."
-            className="pl-8 bg-secondary border-0"
-            value={searchTerm}
-            onChange={(e) => handleSearch(e.target.value)}
-          />
+        <div>
+          <h1 className="text-xl font-semibold">Hi, {user?.name}</h1>
+          <p className="text-sm text-muted-foreground">Find your favorite event</p>
         </div>
-        <Button 
-          variant="outline" 
-          size="icon"
-          onClick={() => setIsFilterOpen(true)}
-          className={`bg-secondary border-0 ${activeFilters.categories.length ? "text-gathr-coral" : ""}`}
-        >
-          <Filter className="h-4 w-4" />
+        <Button variant="ghost" size="icon" className="rounded-full">
+          <Bell className="h-5 w-5" />
         </Button>
       </div>
       
-      {/* Loading state */}
-      {isLoading ? (
-        <div className="event-grid">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-44 w-full rounded-2xl" />
-          ))}
+      {/* Your Ticket Events */}
+      <div>
+        <div className="flex justify-between items-center mb-2">
+          <h2 className="font-medium">Your Ticket Event's</h2>
+          <Button 
+            variant="link" 
+            className="text-xs text-green-500 p-0"
+            onClick={() => navigate("/tickets")}
+          >
+            View all
+          </Button>
         </div>
-      ) : (
-        <>
-          {/* Section: Your Ticket Events */}
-          <div className="mt-6">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="font-medium">Your Ticket Events</h2>
-              <Button 
-                variant="link" 
-                className="text-xs text-green-500 p-0"
-                onClick={() => toggleSectionExpanded('yourTickets')}
-              >
-                {expandedSections.yourTickets ? 'Collapse' : 'View all'}
-              </Button>
-            </div>
-            
-            {bookedEvents.length > 0 ? (
-              <Carousel className="w-full">
-                <CarouselContent className="-ml-2 md:-ml-4">
-                  {bookedEvents.map((event) => (
-                    <CarouselItem 
-                      key={event.id} 
-                      className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3 xl:basis-1/4"
-                      style={{ minWidth: expandedSections.yourTickets ? "auto" : "160px", width: expandedSections.yourTickets ? "100%" : "160px" }}
-                    >
-                      <EventCard 
-                        event={event} 
-                        view="grid"
-                        isBooked={true}
-                      />
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious className="left-0 bg-gray-100" />
-                <CarouselNext className="right-0 bg-gray-100" />
-              </Carousel>
-            ) : (
-              <div className="text-center py-4 bg-secondary/30 rounded-xl">
-                <p className="text-muted-foreground">No booked events yet</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Book events to see them appear here
-                </p>
-              </div>
-            )}
+        
+        {isLoading ? (
+          <div className="flex gap-4 overflow-x-auto pb-2">
+            {[1, 2].map(i => (
+              <div
+                key={i}
+                className="w-40 h-40 rounded-2xl bg-gray-200 animate-pulse"
+              />
+            ))}
           </div>
-          
-          {/* Section: Explore Nearby */}
-          <div className="mt-6">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="font-medium">Explore Nearby</h2>
-              <Button 
-                variant="link" 
-                className="text-xs text-green-500 p-0"
-                onClick={() => toggleSectionExpanded('exploreNearby')}
-              >
-                {expandedSections.exploreNearby ? 'Collapse' : 'View all'}
-              </Button>
-            </div>
-            
-            {filteredEvents.length > 0 ? (
-              <Carousel className="w-full">
-                <CarouselContent className="-ml-2 md:-ml-4">
-                  {filteredEvents.slice(0, expandedSections.exploreNearby ? filteredEvents.length : 4).map((event) => (
-                    <CarouselItem 
-                      key={event.id} 
-                      className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3 xl:basis-1/4"
-                      style={{ minWidth: expandedSections.exploreNearby ? "auto" : "180px", width: expandedSections.exploreNearby ? "100%" : "180px" }}
-                    >
-                      <EventCard 
-                        key={event.id} 
-                        event={event}
-                        view="grid"
-                      />
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious className="left-0 bg-gray-100" />
-                <CarouselNext className="right-0 bg-gray-100" />
-              </Carousel>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">No events found matching your criteria</p>
-                <Button 
-                  variant="link" 
-                  onClick={() => {
-                    setSearchTerm("");
-                    setActiveFilters({ categories: [], date: null, distance: 10 });
-                    setFilteredEvents(events);
-                  }}
+        ) : bookedEvents.length > 0 ? (
+          <ScrollArea className="w-full whitespace-nowrap pb-2">
+            <div className="flex gap-4">
+              {bookedEvents.map(event => (
+                <div 
+                  key={event.id} 
+                  className="w-40 shrink-0"
+                  onClick={() => handleEventClick(event.id)}
                 >
-                  Clear filters
-                </Button>
-              </div>
-            )}
-          </div>
-          
-          {/* Section: More Events */}
-          <div className="mt-6">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="font-medium">More Events</h2>
-              <Button 
-                variant="link" 
-                className="text-xs text-green-500 p-0"
-                onClick={() => toggleSectionExpanded('moreEvents')}
-              >
-                {expandedSections.moreEvents ? 'Collapse' : 'View all'}
-              </Button>
-            </div>
-            
-            <div className="space-y-4">
-              {nationalEvents.slice(0, expandedSections.moreEvents ? nationalEvents.length : 3).map((event) => (
-                <Card 
-                  key={event.id}
-                  className="overflow-hidden rounded-2xl cursor-pointer hover:shadow-lg transition-all"
-                  onClick={() => handleMoreEventClick(event)}
-                >
-                  <div className="flex h-24">
-                    {/* Event image */}
-                    <div 
-                      className="w-1/3 bg-cover bg-center"
-                      style={{ backgroundImage: `url(${event.imageUrl || getFallbackImage(event.title)})` }}
-                    />
-                    
-                    {/* Event details */}
-                    <div className="w-2/3 p-3 flex flex-col justify-between">
-                      <div>
-                        <h3 className="font-medium text-sm line-clamp-1">{event.title}</h3>
-                        <p className="text-xs text-muted-foreground line-clamp-1 mt-1">
-                          {event.description}
-                        </p>
-                        <div className="flex items-center text-xs text-muted-foreground mt-1">
-                          <MapPin className="h-3 w-3 mr-1" />
-                          <span className="line-clamp-1">{event.location}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center text-xs text-muted-foreground">
-                            <Calendar className="h-3 w-3 mr-1" />
-                            {format(new Date(event.date), "MMM d, yyyy")}
-                          </div>
-                          <div className="flex items-center text-xs text-muted-foreground">
-                            <Clock className="h-3 w-3 mr-1" />
-                            {event.startTime} - {event.endTime}
-                          </div>
-                        </div>
-                        
-                        <div className="flex flex-col items-end gap-1">
-                          <Badge className="bg-gathr-coral text-xs">
-                            {event.matchScore}%
-                          </Badge>
-                          <Badge variant="outline" className="text-xs font-medium">
-                            ${event.price}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
+                  <EventCard 
+                    event={event} 
+                    view="grid"
+                    isBooked={true}
+                  />
+                </div>
               ))}
             </div>
+          </ScrollArea>
+        ) : (
+          <div className="text-center py-4 bg-secondary/30 rounded-xl">
+            <p className="text-muted-foreground">No booked events yet</p>
           </div>
-          
-          {/* Intersection observer target for infinite loading */}
-          <div ref={ref} className="h-10" />
-        </>
-      )}
+        )}
+      </div>
       
-      {/* Filter dialog */}
-      <EventFilterDialog 
-        open={isFilterOpen} 
-        onOpenChange={setIsFilterOpen}
-        filters={activeFilters}
-        onApplyFilters={applyFilters}
-      />
+      {/* Explore Nearby */}
+      <div>
+        <div className="flex justify-between items-center mb-2">
+          <h2 className="font-medium">Explore Nearby</h2>
+          <Button 
+            variant="link" 
+            className="text-xs text-green-500 p-0"
+            onClick={() => navigate("/explore")}
+          >
+            View all
+          </Button>
+        </div>
+        
+        {isLoading ? (
+          <div className="grid grid-cols-2 gap-4">
+            {[1, 2, 3, 4].map(i => (
+              <div
+                key={i}
+                className="aspect-square rounded-2xl bg-gray-200 animate-pulse"
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4">
+            {nearbyEvents.map(event => (
+              <div 
+                key={event.id}
+                onClick={() => handleEventClick(event.id)}
+              >
+                <EventCard 
+                  event={event} 
+                  view="grid"
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
       
-      {/* More Events detail dialog */}
-      {selectedMoreEvent && (
-        <EventDetailDialog
-          event={selectedMoreEvent}
-          open={isMoreEventDetailOpen}
-          onOpenChange={setIsMoreEventDetailOpen}
-        />
-      )}
+      {/* More Events */}
+      <div>
+        <div className="flex justify-between items-center mb-2">
+          <h2 className="font-medium">More Event's</h2>
+          <Button 
+            variant="link" 
+            className="text-xs text-green-500 p-0"
+            onClick={() => navigate("/explore")}
+          >
+            View all
+          </Button>
+        </div>
+        
+        {isLoading ? (
+          <div className="space-y-4">
+            {[1, 2, 3].map(i => (
+              <div
+                key={i}
+                className="h-24 rounded-2xl bg-gray-200 animate-pulse"
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {moreEvents.map(event => (
+              <div 
+                key={event.id}
+                className="bg-card rounded-2xl overflow-hidden shadow cursor-pointer"
+                onClick={() => handleEventClick(event.id)}
+              >
+                <div className="flex h-24">
+                  <div 
+                    className="w-1/3 bg-cover bg-center"
+                    style={{ backgroundImage: `url(${event.imageUrl})` }}
+                  />
+                  <div className="w-2/3 p-3 flex flex-col justify-between">
+                    <div>
+                      <h3 className="font-medium text-sm line-clamp-1">{event.title}</h3>
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                        {event.location}
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(event.date).toLocaleDateString()}
+                      </p>
+                      <p className="text-xs font-medium">${event.price}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
