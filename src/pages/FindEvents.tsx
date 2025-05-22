@@ -41,7 +41,7 @@ const FindEvents = () => {
       // Get nearby events
       setNearbyEvents(enhancedEvents.slice(3, 7));
       
-      // Get more events (show at least 5 events)
+      // Get more events (show all remaining events)
       setMoreEvents(enhancedEvents.slice(7));
       
       setIsLoading(false);
@@ -68,7 +68,7 @@ const FindEvents = () => {
       {/* Your Ticket Events */}
       <div>
         <div className="flex justify-between items-center mb-2">
-          <h2 className="font-medium">Your Ticket Event's</h2>
+          <h2 className="font-medium">Your Ticket Events</h2>
           <Button 
             variant="link" 
             className="text-xs text-green-500 p-0"
@@ -130,7 +130,7 @@ const FindEvents = () => {
             {[1, 2, 3, 4].map(i => (
               <div
                 key={i}
-                className="w-32 h-32 rounded-2xl bg-gray-200 animate-pulse shrink-0"
+                className="w-40 h-40 rounded-2xl bg-gray-200 animate-pulse shrink-0"
               />
             ))}
           </div>
@@ -140,7 +140,7 @@ const FindEvents = () => {
               {nearbyEvents.map(event => (
                 <div 
                   key={event.id} 
-                  className="w-32 shrink-0"
+                  className="w-40 shrink-0"
                   onClick={() => handleEventClick(event.id)}
                 >
                   <EventCard 
@@ -157,7 +157,7 @@ const FindEvents = () => {
       {/* More Events */}
       <div>
         <div className="flex justify-between items-center mb-2">
-          <h2 className="font-medium">More Event's</h2>
+          <h2 className="font-medium">More Events</h2>
           <Button 
             variant="link" 
             className="text-xs text-green-500 p-0"
@@ -189,16 +189,7 @@ const FindEvents = () => {
                     className="w-1/3 bg-cover bg-center"
                     style={{ backgroundImage: `url(${event.imageUrl})` }}
                   >
-                    {/* Favorite button */}
-                    <button 
-                      className="absolute top-2 left-2 p-1 bg-black/60 rounded-full"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        // We rely on the EventCard's internal favorite toggling now
-                      }}
-                    >
-                      <EventCard event={event} view="grid" />
-                    </button>
+                    {/* Event image */}
                   </div>
                   <div className="w-2/3 p-3 flex flex-col justify-between">
                     <div>
@@ -214,6 +205,9 @@ const FindEvents = () => {
                       <p className="text-xs font-medium">${event.price}</p>
                     </div>
                   </div>
+                  
+                  {/* Favorite button - add this at proper position */}
+                  <EventCard event={event} view="grid" />
                 </div>
               </div>
             ))}

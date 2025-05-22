@@ -18,13 +18,16 @@ Gathr is an AI-driven event platform that connects young professionals through c
 - **Attendee Matching**: See personality match scores with other event attendees
 - **Location Information**: Find events near you with detailed location data
 - **Social Sharing**: Share events with friends easily
-- **Favorites System**: Mark and unmark events as favorites with the heart icon
+- **Favorites System**: Mark and unmark events as favorites with the heart icon on all event cards
+- **Consistent UI**: Uniform event card design across all sections of the app
 
 ### Navigation & Exploration
 - **Bottom Navigation**: Easy access to Home, Explore, Favorites, Tickets, and Profile sections
-- **Advanced Filtering**: Filter events by categories, date, and distance in the Explore section
+- **Advanced Filtering**: Filter events by categories, date, and distance in the Explore section with a dedicated "Apply Filters" button
 - **Personalized Recommendations**: See events tailored to your preferences on the Home page
 - **Event Categories**: Browse events by specific categories with the quick-select badges
+- **Improved Home Layout**: Consistent card sizes in "Your Ticket Events" and "Explore Nearby" sections
+- **Event Collections**: Browse your booked events, nearby events, and more events with consistent UI
 
 ### Admin Dashboard
 - **User Management**: View and manage all platform users
@@ -62,7 +65,7 @@ Gathr is an AI-driven event platform that connects young professionals through c
 
 ### Authentication
 For demo purposes, use these credentials:
-- Regular user: `you@example.com` / `password123`
+- Regular user: `user@example.com` / `password`
 - Admin user: `admin@example.com` / `admin123`
 
 ## License

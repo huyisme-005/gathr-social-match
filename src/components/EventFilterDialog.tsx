@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Calendar } from "@/components/ui/calendar";
 import { eventCategories } from "../data/eventCategories";
+import { toast } from "sonner";
 
 interface EventFilterDialogProps {
   open: boolean;                                // Controls dialog visibility
@@ -68,6 +69,7 @@ const EventFilterDialog = ({
    */
   const handleApply = () => {
     onApplyFilters({ categories, date, distance });
+    toast.success("Filters applied successfully");
     onOpenChange(false);
   };
   
