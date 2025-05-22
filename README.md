@@ -103,6 +103,7 @@ Gathr is an AI-driven event platform that connects young professionals through c
 - **Image loading**: Some demo images use Unsplash links. If images do not load, check your internet connection.
 - **Demo credentials**: Use the credentials in the Authentication section for demo login.
 - **Windows path issues**: Use `venv\Scripts\activate` for Windows, not the Unix-style path.
+- Events haven't been shown in More Events yet
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details.
