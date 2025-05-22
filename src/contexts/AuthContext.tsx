@@ -13,6 +13,8 @@ export interface User {
   country?: string;
   status: "active" | "premium" | "suspended";
   isAdmin?: boolean;
+  tier?: "free" | "premium" | "enterprise"; // Added tier property
+  isCorporate?: boolean; // Added isCorporate property
 }
 
 // Define context type
@@ -22,7 +24,7 @@ interface AuthContextType {
   isAdmin: boolean;
   hasCompletedPersonalityTest: boolean;
   login: (email: string, password: string) => boolean;
-  register: (name: string, email: string, password: string) => boolean;
+  register: (name: string, email: string, password: string, country?: string) => boolean;
   logout: () => void;
   completePersonalityTest: (personalityTags: string[]) => void;
   getAllUsers: () => User[];
@@ -30,6 +32,9 @@ interface AuthContextType {
   closeAccount: () => void;
   toggleEventFavorite: (eventId: string) => void;
   getFavoriteEvents: () => string[];
+  socialLogin: (provider: string) => Promise<boolean>; // Added socialLogin function
+  phoneLogin: (phoneNumber: string, code: string) => Promise<boolean>; // Added phoneLogin function
+  upgradeTier: (tier: "premium" | "enterprise") => Promise<boolean>; // Added upgradeTier function
 }
 
 // Initial mock users with encrypted passwords
@@ -44,7 +49,8 @@ const initialUsers: User[] = [
     personalityTags: ["tech", "music", "outdoors"],
     country: "United States",
     status: "active",
-    isAdmin: true
+    isAdmin: true,
+    tier: "premium"
   },
   {
     id: "2",
@@ -56,7 +62,8 @@ const initialUsers: User[] = [
     personalityTags: ["food", "sports", "art"],
     country: "Canada",
     status: "active",
-    isAdmin: false
+    isAdmin: false,
+    tier: "free"
   }
 ];
 
@@ -75,6 +82,9 @@ export const AuthContext = createContext<AuthContextType>({
   closeAccount: () => {},
   toggleEventFavorite: () => {},
   getFavoriteEvents: () => [],
+  socialLogin: async () => false,
+  phoneLogin: async () => false,
+  upgradeTier: async () => false
 });
 
 // Provider component that wraps the app and provides auth context
@@ -129,7 +139,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Register function
-  const register = (name: string, email: string, password: string): boolean => {
+  const register = (name: string, email: string, password: string, country?: string): boolean => {
     // Check if user already exists
     if (users.some(u => u.email === email)) {
       return false;
@@ -144,7 +154,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       createdAt: new Date().toISOString(),
       hasCompletedPersonalityTest: false,
       status: "active",
-      personalityTags: []
+      personalityTags: [],
+      country: country || "",
+      tier: "free"
     };
     
     // Add to users list
@@ -159,6 +171,133 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("users", JSON.stringify(updatedUsers));
     
     return true;
+  };
+
+  // Social login function
+  const socialLogin = async (provider: string): Promise<boolean> => {
+    // This is a mock implementation for demo purposes
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Create a mock user based on the provider
+      const mockUser: User = {
+        id: (users.length + 1).toString(),
+        name: `${provider.charAt(0).toUpperCase() + provider.slice(1)} User`,
+        email: `${provider}user@example.com`,
+        hasCompletedPersonalityTest: false,
+        status: "active",
+        createdAt: new Date().toISOString(),
+        tier: "free"
+      };
+      
+      // Check if user already exists
+      const existingUser = users.find(u => u.email === mockUser.email);
+      
+      if (existingUser) {
+        // Log in existing user
+        setUser(existingUser);
+        setIsAuthenticated(true);
+        localStorage.setItem("currentUser", JSON.stringify(existingUser));
+        return true;
+      }
+      
+      // Add new user
+      const updatedUsers = [...users, mockUser];
+      setUsers(updatedUsers);
+      setUser(mockUser);
+      setIsAuthenticated(true);
+      localStorage.setItem("currentUser", JSON.stringify(mockUser));
+      localStorage.setItem("users", JSON.stringify(updatedUsers));
+      
+      return true;
+    } catch (error) {
+      console.error(`${provider} login error:`, error);
+      return false;
+    }
+  };
+  
+  // Phone login function
+  const phoneLogin = async (phoneNumber: string, code: string): Promise<boolean> => {
+    // This is a mock implementation for demo purposes
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // For demo purposes, accept any code of length 6
+      if (code.length !== 6) {
+        return false;
+      }
+      
+      // Create or use existing phone user
+      const emailFromPhone = `phone_${phoneNumber.replace(/\D/g, '')}@example.com`;
+      
+      // Check if user already exists
+      const existingUser = users.find(u => u.email === emailFromPhone);
+      
+      if (existingUser) {
+        // Log in existing user
+        setUser(existingUser);
+        setIsAuthenticated(true);
+        localStorage.setItem("currentUser", JSON.stringify(existingUser));
+        return true;
+      }
+      
+      // Create new phone user
+      const newUser: User = {
+        id: (users.length + 1).toString(),
+        name: `Phone User (${phoneNumber})`,
+        email: emailFromPhone,
+        hasCompletedPersonalityTest: false,
+        status: "active",
+        createdAt: new Date().toISOString(),
+        tier: "free"
+      };
+      
+      // Add new user
+      const updatedUsers = [...users, newUser];
+      setUsers(updatedUsers);
+      setUser(newUser);
+      setIsAuthenticated(true);
+      localStorage.setItem("currentUser", JSON.stringify(newUser));
+      localStorage.setItem("users", JSON.stringify(updatedUsers));
+      
+      return true;
+    } catch (error) {
+      console.error(`Phone login error:`, error);
+      return false;
+    }
+  };
+  
+  // Upgrade tier function
+  const upgradeTier = async (tier: "premium" | "enterprise"): Promise<boolean> => {
+    // This is a mock implementation for demo purposes
+    try {
+      if (!user) return false;
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Update user tier
+      const updatedUser = { ...user, tier };
+      setUser(updatedUser);
+      
+      // Update in users array
+      const updatedUsers = users.map(u => 
+        u.id === user.id ? { ...u, tier } : u
+      );
+      
+      setUsers(updatedUsers);
+      
+      // Update localStorage
+      localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+      localStorage.setItem("users", JSON.stringify(updatedUsers));
+      
+      return true;
+    } catch (error) {
+      console.error(`Upgrade tier error:`, error);
+      return false;
+    }
   };
 
   // Logout function
@@ -260,6 +399,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       closeAccount,
       toggleEventFavorite,
       getFavoriteEvents,
+      socialLogin,
+      phoneLogin,
+      upgradeTier
     }}>
       {children}
     </AuthContext.Provider>

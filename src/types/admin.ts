@@ -1,8 +1,8 @@
 
-import { User } from "@/contexts/AuthContext";
+import type { User } from "@/contexts/AuthContext";
 
 // Export User type from the AuthContext
-export { User };
+export type { User };
 
 export interface AdminMetrics {
   totalUsers: number;

@@ -1,4 +1,3 @@
-
 /**
  * AdminDashboard Component
  * 
@@ -26,7 +25,7 @@ import InvestigationDialog from "@/components/admin/dialogs/InvestigationDialog"
 import AddUserDialog from "@/components/admin/dialogs/AddUserDialog";
 
 // Import types
-import { User, SecurityAlert, SecurityReport, NewUser } from "@/types/admin";
+import type { User, SecurityAlert, SecurityReport, NewUser } from "@/types/admin";
 
 // Simulate real-world data with randomized variations
 const generateRealData = () => {
@@ -68,20 +67,20 @@ const generateRealData = () => {
   };
 };
 
-// Mock user data for admin panel
+// Mock user data for admin panel - Using the imported User type
 const mockUsers: User[] = [
-  { id: 1, name: "Sarah Johnson", email: "sarah@example.com", country: "United States", status: "active" },
-  { id: 2, name: "Michael Chen", email: "michael@example.com", country: "Canada", status: "active" },
-  { id: 3, name: "Emma Wilson", email: "emma@example.com", country: "United Kingdom", status: "premium" },
-  { id: 4, name: "Carlos Mendez", email: "carlos@example.com", country: "Spain", status: "suspended" },
-  { id: 5, name: "Priya Sharma", email: "priya@example.com", country: "India", status: "active" },
-  { id: 6, name: "David Kim", email: "david@example.com", country: "South Korea", status: "premium" },
-  { id: 7, name: "Fatima Al-Farsi", email: "fatima@example.com", country: "UAE", status: "active" },
-  { id: 8, name: "John Smith", email: "john@example.com", country: "Australia", status: "suspended" },
-  { id: 9, name: "Sophia Rodriguez", email: "sophia@example.com", country: "Mexico", status: "premium" },
-  { id: 10, name: "Mohammed Al-Karim", email: "mohammed@example.com", country: "Saudi Arabia", status: "active" },
-  { id: 11, name: "Anna Petrov", email: "anna@example.com", country: "Russia", status: "active" },
-  { id: 12, name: "Liu Wei", email: "liu@example.com", country: "China", status: "premium" },
+  { id: "1", name: "Sarah Johnson", email: "sarah@example.com", country: "United States", status: "active", hasCompletedPersonalityTest: true },
+  { id: "2", name: "Michael Chen", email: "michael@example.com", country: "Canada", status: "active", hasCompletedPersonalityTest: true },
+  { id: "3", name: "Emma Wilson", email: "emma@example.com", country: "United Kingdom", status: "premium", hasCompletedPersonalityTest: true },
+  { id: "4", name: "Carlos Mendez", email: "carlos@example.com", country: "Spain", status: "suspended", hasCompletedPersonalityTest: false },
+  { id: "5", name: "Priya Sharma", email: "priya@example.com", country: "India", status: "active", hasCompletedPersonalityTest: true },
+  { id: "6", name: "David Kim", email: "david@example.com", country: "South Korea", status: "premium", hasCompletedPersonalityTest: true },
+  { id: "7", name: "Fatima Al-Farsi", email: "fatima@example.com", country: "UAE", status: "active", hasCompletedPersonalityTest: false },
+  { id: "8", name: "John Smith", email: "john@example.com", country: "Australia", status: "suspended", hasCompletedPersonalityTest: true },
+  { id: "9", name: "Sophia Rodriguez", email: "sophia@example.com", country: "Mexico", status: "premium", hasCompletedPersonalityTest: true },
+  { id: "10", name: "Mohammed Al-Karim", email: "mohammed@example.com", country: "Saudi Arabia", status: "active", hasCompletedPersonalityTest: false },
+  { id: "11", name: "Anna Petrov", email: "anna@example.com", country: "Russia", status: "active", hasCompletedPersonalityTest: true },
+  { id: "12", name: "Liu Wei", email: "liu@example.com", country: "China", status: "premium", hasCompletedPersonalityTest: true },
 ];
 
 // Mock security alerts
