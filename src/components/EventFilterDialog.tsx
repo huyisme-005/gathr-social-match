@@ -36,15 +36,19 @@ const EventFilterDialog = ({
   const [categories, setCategories] = useState<string[]>([]);
   const [date, setDate] = useState<Date | null>(null);
   const [distance, setDistance] = useState(10);
+  const [filtersChanged, setFiltersChanged] = useState(false);
   
   /**
    * Initialize filter state with current filters when dialog opens
    */
   useEffect(() => {
-    // Initialize state with current filters
-    setCategories(filters.categories);
-    setDate(filters.date);
-    setDistance(filters.distance);
+    if (open) {
+      // Initialize state with current filters
+      setCategories(filters.categories);
+      setDate(filters.date);
+      setDistance(filters.distance);
+      setFiltersChanged(false);
+    }
   }, [filters, open]);
   
   /**
@@ -56,6 +60,7 @@ const EventFilterDialog = ({
     } else {
       setCategories([...categories, category]);
     }
+    setFiltersChanged(true);
   };
   
   /**
@@ -73,6 +78,23 @@ const EventFilterDialog = ({
     setCategories([]);
     setDate(null);
     setDistance(10);
+    setFiltersChanged(true);
+  };
+
+  /**
+   * Handle date selection and flag that filters have changed
+   */
+  const handleDateChange = (newDate: Date | null) => {
+    setDate(newDate);
+    setFiltersChanged(true);
+  };
+
+  /**
+   * Handle distance change and flag that filters have changed
+   */
+  const handleDistanceChange = (newDistance: number[]) => {
+    setDistance(newDistance[0]);
+    setFiltersChanged(true);
   };
   
   return (
@@ -108,7 +130,7 @@ const EventFilterDialog = ({
             <Calendar
               mode="single"
               selected={date || undefined}
-              onSelect={setDate as any}
+              onSelect={handleDateChange as any}
               className="border rounded-md"
               disabled={(date) => date < new Date()}
             />
@@ -125,7 +147,7 @@ const EventFilterDialog = ({
               min={1}
               max={50}
               step={1}
-              onValueChange={([value]) => setDistance(value)}
+              onValueChange={handleDistanceChange}
             />
           </div>
         </div>
@@ -134,7 +156,11 @@ const EventFilterDialog = ({
           <Button variant="outline" onClick={handleClear}>
             Clear All
           </Button>
-          <Button className="bg-gathr-coral hover:bg-gathr-coral/90" onClick={handleApply}>
+          <Button 
+            className="bg-gathr-coral hover:bg-gathr-coral/90" 
+            onClick={handleApply}
+            disabled={!filtersChanged}
+          >
             Apply Filters
           </Button>
         </DialogFooter>

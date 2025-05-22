@@ -124,9 +124,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Login function
   const login = (email: string, password: string): boolean => {
+    console.log("Login attempt:", email, password);
     const foundUser = users.find(u => u.email === email && u.password === password);
     
     if (foundUser) {
+      console.log("User found:", foundUser);
       // Create a copy without the password for storage
       const { password, ...userWithoutPassword } = foundUser;
       setUser(userWithoutPassword);
@@ -135,6 +137,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return true;
     }
     
+    console.log("Login failed: User not found or password incorrect");
     return false;
   };
 

@@ -8,7 +8,7 @@ Gathr is an AI-driven event platform that connects young professionals through c
 ### User Experience
 - **Personalized Event Discovery**: Browse events based on your personality profile and preferences
 - **Event Booking**: Seamlessly book tickets to events with confirmation and refund options
-- **Favorites**: Save events you're interested in for later viewing
+- **Favorites**: Save events you're interested in with the heart icon for later viewing
 - **Tickets Management**: View all your booked events in one place
 - **User Profiles**: Customize your profile and preferences
 - **Account Management**: Update personal information, change password, or close account
@@ -18,6 +18,13 @@ Gathr is an AI-driven event platform that connects young professionals through c
 - **Attendee Matching**: See personality match scores with other event attendees
 - **Location Information**: Find events near you with detailed location data
 - **Social Sharing**: Share events with friends easily
+- **Favorites System**: Mark and unmark events as favorites with the heart icon
+
+### Navigation & Exploration
+- **Bottom Navigation**: Easy access to Home, Explore, Favorites, Tickets, and Profile sections
+- **Advanced Filtering**: Filter events by categories, date, and distance in the Explore section
+- **Personalized Recommendations**: See events tailored to your preferences on the Home page
+- **Event Categories**: Browse events by specific categories with the quick-select badges
 
 ### Admin Dashboard
 - **User Management**: View and manage all platform users
@@ -26,8 +33,8 @@ Gathr is an AI-driven event platform that connects young professionals through c
 
 ## Pages
 - **Home**: Personalized feed showing booked events, nearby events, and recommended events
-- **Explore**: Discover new events by category, location, or popularity
-- **Favorites**: View all events you've marked as favorites
+- **Explore**: Discover new events by category, location, or popularity with advanced filtering
+- **Favorites**: View all events you've marked as favorites with the heart icon
 - **Tickets**: Access all your booked events
 - **Profile**: Manage your account settings, preferences, and personal information
 - **Event Details**: View comprehensive information about a specific event
@@ -42,10 +49,6 @@ Gathr is an AI-driven event platform that connects young professionals through c
 - React Hook Form
 - Lucide icons
 
-## Screenshots
-![Home Screen](path-to-home-screenshot.png)
-![Event Detail](path-to-detail-screenshot.png)
-
 ## Getting Started
 
 ### Prerequisites
@@ -56,6 +59,11 @@ Gathr is an AI-driven event platform that connects young professionals through c
 1. Clone the repository
 2. Install dependencies: `npm install`
 3. Start the development server: `npm run dev`
+
+### Authentication
+For demo purposes, use these credentials:
+- Regular user: `you@example.com` / `password123`
+- Admin user: `admin@example.com` / `admin123`
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details.

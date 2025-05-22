@@ -41,8 +41,8 @@ const FindEvents = () => {
       // Get nearby events
       setNearbyEvents(enhancedEvents.slice(3, 7));
       
-      // Get more events
-      setMoreEvents(enhancedEvents.slice(7, 10));
+      // Get more events (show at least 5 events)
+      setMoreEvents(enhancedEvents.slice(7));
       
       setIsLoading(false);
     }, 1000);
@@ -126,28 +126,31 @@ const FindEvents = () => {
         </div>
         
         {isLoading ? (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="flex overflow-x-auto gap-4 pb-2">
             {[1, 2, 3, 4].map(i => (
               <div
                 key={i}
-                className="aspect-square rounded-2xl bg-gray-200 animate-pulse"
+                className="w-32 h-32 rounded-2xl bg-gray-200 animate-pulse shrink-0"
               />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4">
-            {nearbyEvents.map(event => (
-              <div 
-                key={event.id}
-                onClick={() => handleEventClick(event.id)}
-              >
-                <EventCard 
-                  event={event} 
-                  view="grid"
-                />
-              </div>
-            ))}
-          </div>
+          <ScrollArea className="w-full whitespace-nowrap pb-2">
+            <div className="flex gap-4">
+              {nearbyEvents.map(event => (
+                <div 
+                  key={event.id} 
+                  className="w-32 shrink-0"
+                  onClick={() => handleEventClick(event.id)}
+                >
+                  <EventCard 
+                    event={event} 
+                    view="grid"
+                  />
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
         )}
       </div>
       
@@ -178,14 +181,25 @@ const FindEvents = () => {
             {moreEvents.map(event => (
               <div 
                 key={event.id}
-                className="bg-card rounded-2xl overflow-hidden shadow cursor-pointer"
+                className="bg-card rounded-2xl overflow-hidden shadow cursor-pointer relative"
                 onClick={() => handleEventClick(event.id)}
               >
                 <div className="flex h-24">
                   <div 
                     className="w-1/3 bg-cover bg-center"
                     style={{ backgroundImage: `url(${event.imageUrl})` }}
-                  />
+                  >
+                    {/* Favorite button */}
+                    <button 
+                      className="absolute top-2 left-2 p-1 bg-black/60 rounded-full"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // We rely on the EventCard's internal favorite toggling now
+                      }}
+                    >
+                      <EventCard event={event} view="grid" />
+                    </button>
+                  </div>
                   <div className="w-2/3 p-3 flex flex-col justify-between">
                     <div>
                       <h3 className="font-medium text-sm line-clamp-1">{event.title}</h3>

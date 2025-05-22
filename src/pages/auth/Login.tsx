@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
@@ -25,16 +24,33 @@ const Login = () => {
   const navigate = useNavigate();
   
   // Handle email/password login
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const handleEmailLogin = (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
       setIsLoading(true);
-      await login(email, password);
-      navigate("/find-events");
+      const success = login(email, password);
+      
+      if (success) {
+        toast({
+          title: "Login successful",
+          description: "Welcome back!",
+        });
+        navigate("/find-events");
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Login failed",
+          description: "Invalid email or password. Please try again.",
+        });
+      }
     } catch (error) {
-      // Error is handled in the context with toast notification
       console.error("Login error:", error);
+      toast({
+        variant: "destructive",
+        title: "Login error",
+        description: "An unexpected error occurred. Please try again.",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -122,10 +138,10 @@ const Login = () => {
               
               <div className="text-sm text-center">
                 <span>For demo, use: </span>
-                <span className="font-medium">demo@gathr.com / password</span>
+                <span className="font-medium">you@example.com / password123</span>
                 <br />
                 <span>For admin demo: </span>
-                <span className="font-medium">admin@gathr.com / adminpass</span>
+                <span className="font-medium">admin@example.com / admin123</span>
               </div>
               
               <Button 

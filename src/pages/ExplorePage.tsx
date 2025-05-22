@@ -17,6 +17,7 @@ import EventCard from "@/components/EventCard";
 import { Event } from "@/types/event";
 import { mockEvents } from "@/data/mockEvents";
 import EventFilterDialog from "@/components/EventFilterDialog";
+import { toast } from "@/components/ui/use-toast";
 
 const ExplorePage = () => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -28,6 +29,11 @@ const ExplorePage = () => {
   ]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    categories: [] as string[],
+    date: null as Date | null,
+    distance: 10
+  });
   const navigate = useNavigate();
   
   // Fetch events on component mount
@@ -99,6 +105,41 @@ const ExplorePage = () => {
     }
   };
 
+  // Apply advanced filters
+  const handleApplyFilters = (newFilters: { categories: string[]; date: Date | null; distance: number }) => {
+    setFilters(newFilters);
+    
+    // Apply all filters together
+    const filtered = events.filter(event => {
+      // Filter by search term
+      const matchesSearch = searchTerm
+        ? event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          event.description.toLowerCase().includes(searchTerm.toLowerCase())
+        : true;
+      
+      // Filter by selected categories (from filter dialog)
+      const matchesCategories = newFilters.categories.length > 0
+        ? newFilters.categories.some(category => event.categories.includes(category))
+        : true;
+      
+      // Filter by date
+      const matchesDate = newFilters.date
+        ? new Date(event.date).toDateString() === newFilters.date.toDateString()
+        : true;
+      
+      // For distance, we'd need real geolocation data
+      // This is a simplified version
+      
+      return matchesSearch && matchesCategories && matchesDate;
+    });
+    
+    setFilteredEvents(filtered);
+    toast({
+      title: "Filters applied",
+      description: `Showing ${filtered.length} events based on your filters`,
+    });
+  };
+
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-medium">Explore Events</h1>
@@ -149,7 +190,9 @@ const ExplorePage = () => {
         <h2 className="font-medium">
           {selectedCategory 
             ? `${selectedCategory} Events` 
-            : "All Events"}
+            : filters.categories.length > 0 
+              ? `Filtered Events (${filteredEvents.length})`
+              : "All Events"}
         </h2>
         
         {filteredEvents.length === 0 ? (
@@ -160,6 +203,7 @@ const ExplorePage = () => {
               onClick={() => {
                 setSearchTerm("");
                 setSelectedCategory(null);
+                setFilters({ categories: [], date: null, distance: 10 });
                 setFilteredEvents(events);
               }}
             >
@@ -183,8 +227,8 @@ const ExplorePage = () => {
       <EventFilterDialog
         open={isFilterOpen}
         onOpenChange={setIsFilterOpen}
-        filters={{ categories: selectedCategory ? [selectedCategory] : [], date: null, distance: 10 }}
-        onApplyFilters={() => {}} // To be implemented
+        filters={filters}
+        onApplyFilters={handleApplyFilters}
       />
     </div>
   );

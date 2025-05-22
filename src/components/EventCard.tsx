@@ -6,16 +6,17 @@
  * It shows event details and provides appropriate actions based on the user's
  * relationship to the event (attendee, creator, or potential attendee).
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, MapPin, Users, X, Check, DollarSign, Timer } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, X, Check, DollarSign, Timer, Heart } from "lucide-react";
 import { format } from "date-fns";
 import { Event } from "../types/event";
 import { toast } from "sonner";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import EventDetailDialog from "./EventDetailDialog";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface EventCardProps {
   event: Event;              // Event data to display
@@ -36,6 +37,13 @@ const EventCard = ({
   const [isAttending, setIsAttending] = useState(isBooked || false);
   const [showDetail, setShowDetail] = useState(false);
   const [bookingTime, setBookingTime] = useState<Date | null>(null);
+  const { getFavoriteEvents, toggleEventFavorite } = useAuth();
+  const [isFavorite, setIsFavorite] = useState(false);
+  
+  useEffect(() => {
+    const favoriteEvents = getFavoriteEvents();
+    setIsFavorite(favoriteEvents.includes(event.id));
+  }, [getFavoriteEvents, event.id]);
   
   /**
    * Handles booking an event - in a real app, this would call an API
@@ -60,6 +68,21 @@ const EventCard = ({
       toast.success(`Booking canceled with full refund for ${event.title}`);
     } else {
       toast.info(`Booking canceled for ${event.title} - no refund available after 24 hours`);
+    }
+  };
+
+  /**
+   * Handle favorite toggle
+   */
+  const handleFavoriteToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toggleEventFavorite(event.id);
+    setIsFavorite(!isFavorite);
+    
+    if (!isFavorite) {
+      toast.success(`Added ${event.title} to favorites`);
+    } else {
+      toast.info(`Removed ${event.title} from favorites`);
     }
   };
 
@@ -95,6 +118,16 @@ const EventCard = ({
                 ${event.price}
               </Badge>
             </div>
+            
+            {/* Favorite button */}
+            <button 
+              className="absolute top-2 left-2 p-1.5 bg-black/60 rounded-full"
+              onClick={handleFavoriteToggle}
+            >
+              <Heart 
+                className={`h-4 w-4 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-white'}`} 
+              />
+            </button>
             
             {/* Content overlay */}
             <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
@@ -143,9 +176,19 @@ const EventCard = ({
     <Card className="overflow-hidden">
       {/* Event image */}
       <div 
-        className="h-48 bg-cover bg-center" 
+        className="h-48 bg-cover bg-center relative" 
         style={{ backgroundImage: `url(${event.imageUrl || '/placeholder.svg'})` }}
-      />
+      >
+        {/* Favorite button */}
+        <button 
+          className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-full"
+          onClick={handleFavoriteToggle}
+        >
+          <Heart 
+            className={`h-4 w-4 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-white'}`} 
+          />
+        </button>
+      </div>
       
       <CardHeader>
         <div className="flex items-start justify-between">
