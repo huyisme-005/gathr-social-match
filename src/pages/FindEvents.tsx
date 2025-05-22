@@ -1,4 +1,3 @@
-
 /**
  * FindEvents Page (Home)
  * 
@@ -181,33 +180,24 @@ const FindEvents = () => {
             {moreEvents.map(event => (
               <div 
                 key={event.id}
-                className="bg-card rounded-2xl overflow-hidden shadow cursor-pointer relative"
+                className="bg-card rounded-2xl overflow-hidden shadow cursor-pointer relative w-full mb-2 flex h-28 md:h-32"
                 onClick={() => handleEventClick(event.id)}
               >
-                <div className="flex h-24">
-                  <div 
-                    className="w-1/3 bg-cover bg-center"
-                    style={{ backgroundImage: `url(${event.imageUrl})` }}
-                  >
-                    {/* Event image */}
+                {/* Event image */}
+                <div 
+                  className="more-event-image w-1/3"
+                  data-img={event.imageUrl} // for debugging, not used in rendering
+                />
+                {/* Event details */}
+                <div className="w-2/3 p-3 flex flex-col justify-between">
+                  <div>
+                    <h3 className="font-medium text-base line-clamp-1">{event.title}</h3>
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{event.location}</p>
                   </div>
-                  <div className="w-2/3 p-3 flex flex-col justify-between">
-                    <div>
-                      <h3 className="font-medium text-sm line-clamp-1">{event.title}</h3>
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
-                        {event.location}
-                      </p>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(event.date).toLocaleDateString()}
-                      </p>
-                      <p className="text-xs font-medium">${event.price}</p>
-                    </div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">{new Date(event.date).toLocaleDateString()}</p>
+                    <p className="text-xs font-medium">${event.price}</p>
                   </div>
-                  
-                  {/* Favorite button - add this at proper position */}
-                  <EventCard event={event} view="grid" />
                 </div>
               </div>
             ))}

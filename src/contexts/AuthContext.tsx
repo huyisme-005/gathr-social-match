@@ -121,30 +121,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("favoriteEvents", JSON.stringify(favorites));
   }, [favorites]);
 
-  // Login function - Fixed to ensure proper authentication
+  // Login function - supports demo credentials and robust authentication
   const login = (email: string, password: string): boolean => {
-    console.log("Login attempt:", email, password);
+    // Always check the users array for the correct email and password
     const foundUser = users.find(u => u.email === email && u.password === password);
-    
     if (foundUser) {
-      console.log("User found:", foundUser);
-      // Create a copy without the password for storage
+      // Remove password before storing in state/localStorage
       const { password: _, ...userWithoutPassword } = foundUser;
-      
-      // Update state and localStorage
       setUser(userWithoutPassword);
       setIsAuthenticated(true);
       localStorage.setItem("currentUser", JSON.stringify(userWithoutPassword));
-      
-      console.log("Authentication state updated:", {
-        isAuthenticated: true,
-        user: userWithoutPassword
-      });
-      
       return true;
     }
-    
-    console.log("Login failed: User not found or password incorrect");
     return false;
   };
 

@@ -1,4 +1,3 @@
-
 # Gathr - Social Event Matchmaking App
 
 Gathr is an AI-driven event platform that connects young professionals through curated events and personality-based matching.
@@ -63,10 +62,47 @@ Gathr is an AI-driven event platform that connects young professionals through c
 2. Install dependencies: `npm install`
 3. Start the development server: `npm run dev`
 
-### Authentication
-For demo purposes, use these credentials:
-- Regular user: `user@example.com` / `password`
-- Admin user: `admin@example.com` / `admin123`
+## Running the Project (Frontend + Backend)
+
+### 1. Start the Backend (Flask API)
+- Open a terminal and navigate to the `backend` directory:
+  ```sh
+  cd backend
+  ```
+- (Optional) Create and activate a Python virtual environment:
+  ```sh
+  python -m venv venv
+  venv\Scripts\activate  # On Windows
+  # or
+  source venv/bin/activate  # On macOS/Linux
+  ```
+- Install dependencies:
+  ```sh
+  pip install -r requirements.txt
+  ```
+- Start the backend server:
+  ```sh
+  python run.py
+  ```
+- The backend API will be available at `http://localhost:5000`
+
+### 2. Start the Frontend (React App)
+- Open a new terminal and navigate to the project root:
+  ```sh
+  cd ..
+  npm install
+  npm run dev
+  ```
+- The frontend will be available at `http://localhost:8080`
+
+## Troubleshooting & Potential Issues
+- **CORS errors**: Make sure the backend is running before the frontend. The frontend expects the backend at `http://localhost:5000`.
+- **Port conflicts**: If port 5000 (backend) or 8080 (frontend) is in use, stop other services or change the port in the config.
+- **Database connection**: Ensure PostgreSQL is running and the connection string in `backend/database.py` is correct.
+- **Missing dependencies**: Run `pip install -r requirements.txt` (backend) and `npm install` (frontend) if you see import/module errors.
+- **Image loading**: Some demo images use Unsplash links. If images do not load, check your internet connection.
+- **Demo credentials**: Use the credentials in the Authentication section for demo login.
+- **Windows path issues**: Use `venv\Scripts\activate` for Windows, not the Unix-style path.
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details.
