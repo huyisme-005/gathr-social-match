@@ -76,7 +76,7 @@ const EventCard = ({
     return (
       <>
         <Card 
-          className="overflow-hidden cursor-pointer h-44 rounded-2xl hover:shadow-lg transition-all"
+          className="overflow-hidden cursor-pointer aspect-square w-full rounded-2xl hover:shadow-lg transition-all"
           onClick={() => setShowDetail(true)}
         >
           <div className="h-full relative">
@@ -118,6 +118,12 @@ const EventCard = ({
               <div className="flex items-center text-xs text-white/70 mt-0.5">
                 <Clock className="h-3 w-3 mr-1" />
                 {event.startTime} - {event.endTime}
+              </div>
+              
+              {/* Event location */}
+              <div className="flex items-center text-xs text-white/70 mt-0.5">
+                <MapPin className="h-3 w-3 mr-1" />
+                <span className="line-clamp-1">{event.location}</span>
               </div>
             </div>
           </div>

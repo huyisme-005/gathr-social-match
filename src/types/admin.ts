@@ -1,68 +1,45 @@
+import { User } from "@/contexts/AuthContext";
 
-// User types
-export interface User {
-  id: number;
-  name: string;
-  email: string;
-  country: string;
-  status: "active" | "premium" | "suspended";
+// Export User type from the AuthContext
+
+export interface AdminMetrics {
+  totalUsers: number;
+  activeUsers: number;
+  events: {
+    total: number;
+    upcoming: number;
+    past: number;
+  };
+  revenue: {
+    today: number;
+    week: number;
+    month: number;
+    year: number;
+  };
+  userGrowthData: {
+    month: string;
+    users: number;
+  }[];
+  eventTypeDistribution: {
+    category: string;
+    count: number;
+  }[];
+  conversionRates: {
+    viewed: number;
+    booked: number;
+    attended: number;
+  };
 }
 
-export interface NewUser {
-  name: string;
-  email: string;
-  country: string;
-  status: "active" | "premium" | "suspended";
-}
-
-// Security types
-export interface SecurityAlert {
-  id: number;
-  type: "critical" | "warning" | "info";
-  title: string;
+export interface SecurityThreat {
+  id: string;
+  type: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
   description: string;
   timestamp: string;
+  resolved: boolean;
+  ipAddress: string;
+  affectedUsers?: number;
 }
 
-export interface SecurityReport {
-  generatedAt: string;
-  summary: {
-    totalAlerts: number;
-    criticalAlerts: number;
-    highAlerts: number;
-    mediumAlerts: number;
-    resolvedAlerts: number;
-  };
-  loginActivity: {
-    successfulLogins: number;
-    failedLogins: number;
-    suspiciousLogins: number;
-  };
-  vulnerabilities: {
-    severity: "high" | "medium" | "low";
-    description: string;
-    recommendation: string;
-  }[];
-}
-
-// Analytics types
-export interface AnalyticsData {
-  userGrowthData: { month: string; users: number }[];
-  eventData: { name: string; value: number }[];
-  demographicData: { age: string; users: number }[];
-  usersByCountry: { country: string; users: number }[];
-}
-
-// Admin metrics types
-export interface AdminMetricsProps {
-  activeUsers: number;
-  totalEvents: number;
-  conversionRate: number;
-  securityAlertCount: number;
-  growthRate?: {
-    users: number;
-    events: number;
-    conversion: number;
-    security: number;
-  };
-}
+// More admin-specific types can be added here

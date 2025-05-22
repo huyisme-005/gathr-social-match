@@ -19,6 +19,8 @@ Gathr is a social event platform that connects people through shared interests a
 - **Carousel Navigation**: Browse events with convenient left/right navigation
 - **Expandable Sections**: Show more events with "View all" / "Collapse" functionality
 - **Refund Policy**: Full refunds within 24 hours of booking
+- **Location Information**: View event locations before booking
+- **Event Images**: Visual representation for all events
 
 ## Tech Stack
 
@@ -80,13 +82,14 @@ Gathr is a social event platform that connects people through shared interests a
 - **Admin Navigation**: Use the "Back to App" button in the header to return to the main app from admin page.
 - **Event Booking**: Currently implemented as a client-side state only. In a production app, this would connect to an API.
 - **Payments**: Payment simulation is included, but it would require a real payment processor integration in production.
-- Users couldn't do the same thing for events on the 'More Events' section, something to be fixed later on.
-- Events' boxes accidentally got turned into rectangles, instead of squares.
-- Background color change is still not good enough.
 
 ## Theme Customization
 
 The app supports custom background colors with several preset options including black, white, dark gray, navy, and dark purple. Access the theme toggle from the top-right corner of the main pages.
+
+## User Accounts
+
+The app stores registered user accounts locally, allowing you to log back in after closing the website. Admin users can view and manage all registered users through the Admin Dashboard.
 
 ## Contributing
 

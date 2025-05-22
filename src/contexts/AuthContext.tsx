@@ -11,7 +11,7 @@ import { toast } from "@/components/ui/use-toast";
 import gathrApi from "../api/gathrApi";
 
 // User type definition
-interface User {
+export interface User {
   id: string;                          // Unique identifier for the user
   name: string;                        // User's display name
   email: string;                       // User's email address
@@ -23,6 +23,8 @@ interface User {
   tier?: "free" | "premium" | "enterprise"; // User subscription tier
   isCorporate?: boolean;               // Whether this is a corporate account
   isAdmin?: boolean;                   // Whether this user is a platform admin
+  status?: "active" | "suspended" | "premium"; // User's account status
+  createdAt?: string;                  // When the user account was created
 }
 
 // AuthContext type definition
@@ -39,6 +41,7 @@ interface AuthContextType {
   updateUserProfile: (data: Partial<User>) => Promise<void>; // Function to update user profile
   upgradeTier: (tier: "premium" | "enterprise") => Promise<void>; // Function to upgrade subscription tier
   isAdmin: boolean;                    // Whether the current user is a platform admin
+  getAllUsers: () => User[];           // Function to get all registered users (for admin)
 }
 
 // Create the context
@@ -107,7 +110,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           personalityTags: [],
           country: "United States",
           authProvider: "email",
-          tier: "free"
+          tier: "free",
+          status: "active",
+          createdAt: "2023-01-15"
         };
         setUser(demoUser);
         
@@ -126,7 +131,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           country: "United States",
           authProvider: "email",
           tier: "enterprise",
-          isAdmin: true
+          isAdmin: true,
+          status: "active",
+          createdAt: "2023-01-01"
         };
         setUser(adminUser);
         setIsAdmin(true);
@@ -148,6 +155,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Clone the account without the password field for security
           const { password, ...userWithoutPassword } = foundAccount;
           setUser(userWithoutPassword);
+          
+          if (userWithoutPassword.isAdmin) {
+            setIsAdmin(true);
+          }
           
           toast({
             title: "Login successful",
@@ -190,7 +201,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         personalityTags: [],
         country: country || "United States", // Default country if not specified
         authProvider: "email",
-        tier: "free" // Default to free tier
+        tier: "free", // Default to free tier
+        status: "active",
+        createdAt: new Date().toISOString().split('T')[0]
       };
       
       // Store in accounts list (with password) for future logins
@@ -228,8 +241,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         hasCompletedPersonalityTest: false,
         personalityTags: [],
         authProvider: provider,
-        tier: "free"
+        tier: "free",
+        status: "active",
+        createdAt: new Date().toISOString().split('T')[0]
       };
+      
+      // Store in accounts list
+      const storedAccounts = localStorage.getItem("gathr_accounts") || "[]";
+      const accounts = JSON.parse(storedAccounts);
+      
+      // Don't store the same account twice
+      if (!accounts.some((acc: any) => acc.email === socialUser.email)) {
+        localStorage.setItem("gathr_accounts", JSON.stringify([...accounts, socialUser]));
+      }
       
       setUser(socialUser);
       
@@ -266,8 +290,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         hasCompletedPersonalityTest: false,
         personalityTags: [],
         authProvider: "phone",
-        tier: "free"
+        tier: "free",
+        status: "active",
+        createdAt: new Date().toISOString().split('T')[0]
       };
+      
+      // Store in accounts list
+      const storedAccounts = localStorage.getItem("gathr_accounts") || "[]";
+      const accounts = JSON.parse(storedAccounts);
+      
+      // Don't store the same account twice
+      if (!accounts.some((acc: any) => acc.email === phoneUser.email)) {
+        localStorage.setItem("gathr_accounts", JSON.stringify([...accounts, phoneUser]));
+      }
       
       setUser(phoneUser);
       
@@ -312,6 +347,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       setUser(updatedUser);
       
+      // Update in stored accounts as well
+      const storedAccounts = localStorage.getItem("gathr_accounts") || "[]";
+      const accounts = JSON.parse(storedAccounts);
+      
+      const updatedAccounts = accounts.map((account: any) => {
+        if (account.email === user.email) {
+          return {
+            ...account,
+            hasCompletedPersonalityTest: personalityTags.length > 0,
+            personalityTags
+          };
+        }
+        return account;
+      });
+      
+      localStorage.setItem("gathr_accounts", JSON.stringify(updatedAccounts));
+      
       toast({
         title: "Personality test completed",
         description: "Your profile has been updated with your personality traits",
@@ -330,6 +382,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...data
       };
       setUser(updatedUser);
+      
+      // Update in stored accounts as well
+      const storedAccounts = localStorage.getItem("gathr_accounts") || "[]";
+      const accounts = JSON.parse(storedAccounts);
+      
+      const updatedAccounts = accounts.map((account: any) => {
+        if (account.email === user.email) {
+          return { ...account, ...data };
+        }
+        return account;
+      });
+      
+      localStorage.setItem("gathr_accounts", JSON.stringify(updatedAccounts));
       
       toast({
         title: "Profile updated",
@@ -350,11 +415,83 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       setUser(updatedUser);
       
+      // Update in stored accounts as well
+      const storedAccounts = localStorage.getItem("gathr_accounts") || "[]";
+      const accounts = JSON.parse(storedAccounts);
+      
+      const updatedAccounts = accounts.map((account: any) => {
+        if (account.email === user.email) {
+          return { ...account, tier };
+        }
+        return account;
+      });
+      
+      localStorage.setItem("gathr_accounts", JSON.stringify(updatedAccounts));
+      
       toast({
         title: "Subscription upgraded",
         description: `You've successfully upgraded to the ${tier} tier!`,
       });
     }
+  };
+
+  /**
+   * Get all registered users (for admin)
+   */
+  const getAllUsers = () => {
+    // Get from local storage
+    const storedAccounts = localStorage.getItem("gathr_accounts") || "[]";
+    const accounts = JSON.parse(storedAccounts);
+    
+    // Add demo users if not already there
+    const demoUser: User = {
+      id: "1",
+      name: "Demo User",
+      email: "demo@gathr.com",
+      hasCompletedPersonalityTest: false,
+      personalityTags: [],
+      country: "United States",
+      authProvider: "email",
+      tier: "free",
+      status: "active",
+      createdAt: "2023-01-15"
+    };
+    
+    const adminUser: User = {
+      id: "admin1",
+      name: "Admin User",
+      email: "admin@gathr.com",
+      hasCompletedPersonalityTest: true,
+      personalityTags: ["analytical", "organized"],
+      country: "United States",
+      authProvider: "email",
+      tier: "enterprise",
+      isAdmin: true,
+      status: "active",
+      createdAt: "2023-01-01"
+    };
+    
+    // Remove passwords from returned accounts
+    const accountsWithoutPasswords = accounts.map((acc: any) => {
+      const { password, ...userWithoutPassword } = acc;
+      return {
+        ...userWithoutPassword,
+        status: userWithoutPassword.status || 'active'
+      };
+    });
+    
+    // Add demo users if not already in the list
+    const allUsers = accountsWithoutPasswords.slice();
+    
+    if (!allUsers.some(u => u.email === demoUser.email)) {
+      allUsers.push(demoUser);
+    }
+    
+    if (!allUsers.some(u => u.email === adminUser.email)) {
+      allUsers.push(adminUser);
+    }
+    
+    return allUsers;
   };
 
   // Create the context value object
@@ -370,7 +507,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     completePersonalityTest,
     updateUserProfile,
     upgradeTier,
-    isAdmin
+    isAdmin,
+    getAllUsers
   };
 
   // Show loading state while checking authentication

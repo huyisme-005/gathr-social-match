@@ -1,4 +1,3 @@
-
 /**
  * FindEvents Page
  * 
@@ -19,6 +18,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "../contexts/AuthContext";
 import EventFilterDialog from "../components/EventFilterDialog";
 import EventCard from "../components/EventCard";
+import EventDetailDialog from "../components/EventDetailDialog";
 import { mockEvents } from "../data/mockEvents";
 import { Event } from "../types/event";
 import { ThemeToggle } from "../components/ThemeToggle";
@@ -72,6 +72,10 @@ const FindEvents = () => {
   // State for view mode
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   
+  // New state for selected event in More Events section
+  const [selectedMoreEvent, setSelectedMoreEvent] = useState<Event | null>(null);
+  const [isMoreEventDetailOpen, setIsMoreEventDetailOpen] = useState(false);
+  
   // Get current user data from auth context
   const { user } = useAuth();
   
@@ -108,7 +112,8 @@ const FindEvents = () => {
           ...evt, 
           id: `${evt.id}-copy`, 
           title: `${evt.title} ${Math.floor(Math.random() * 100)}`,
-          price: Math.floor(Math.random() * 100) + 10
+          price: Math.floor(Math.random() * 100) + 10,
+          imageUrl: evt.imageUrl || getFallbackImage(evt.title)
         })).slice(0, 6)
       ];
       
@@ -118,6 +123,36 @@ const FindEvents = () => {
     }, 1000);
   }, []);
   
+  // Function to get fallback image based on event title
+  const getFallbackImage = (title: string) => {
+    const techImages = [
+      "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b",
+      "https://images.unsplash.com/photo-1518770660439-4636190af475",
+      "https://images.unsplash.com/photo-1461749280684-dccba630e2f6",
+    ];
+    
+    const natureImages = [
+      "https://images.unsplash.com/photo-1472396961693-142e6e269027",
+      "https://images.unsplash.com/photo-1433086966358-54859d0ed716",
+      "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07",
+    ];
+    
+    const socialImages = [
+      "https://images.unsplash.com/photo-1527576539890-dfa815648363",
+      "https://images.unsplash.com/photo-1488972685288-c3fd157d7c7a",
+      "https://images.unsplash.com/photo-1487958449943-2429e8be8625",
+    ];
+    
+    // Determine image category based on title keywords
+    if (title.toLowerCase().includes("tech") || title.toLowerCase().includes("ai") || title.toLowerCase().includes("code")) {
+      return techImages[Math.floor(Math.random() * techImages.length)];
+    } else if (title.toLowerCase().includes("hike") || title.toLowerCase().includes("outdoor") || title.toLowerCase().includes("park")) {
+      return natureImages[Math.floor(Math.random() * natureImages.length)];
+    } else {
+      return socialImages[Math.floor(Math.random() * socialImages.length)];
+    }
+  };
+
   /**
    * Handle infinite scrolling when user reaches bottom of the list
    */
@@ -220,6 +255,14 @@ const FindEvents = () => {
       ...prev,
       [section]: !prev[section]
     }));
+  };
+  
+  /**
+   * Handle click on More Event card
+   */
+  const handleMoreEventClick = (event: Event) => {
+    setSelectedMoreEvent(event);
+    setIsMoreEventDetailOpen(true);
   };
   
   return (
@@ -370,15 +413,13 @@ const FindEvents = () => {
                 <Card 
                   key={event.id}
                   className="overflow-hidden rounded-2xl cursor-pointer hover:shadow-lg transition-all"
-                  onClick={() => {
-                    // Handle click for rectangle event cards
-                  }}
+                  onClick={() => handleMoreEventClick(event)}
                 >
                   <div className="flex h-24">
                     {/* Event image */}
                     <div 
                       className="w-1/3 bg-cover bg-center"
-                      style={{ backgroundImage: `url(${event.imageUrl || '/placeholder.svg'})` }}
+                      style={{ backgroundImage: `url(${event.imageUrl || getFallbackImage(event.title)})` }}
                     />
                     
                     {/* Event details */}
@@ -388,6 +429,10 @@ const FindEvents = () => {
                         <p className="text-xs text-muted-foreground line-clamp-1 mt-1">
                           {event.description}
                         </p>
+                        <div className="flex items-center text-xs text-muted-foreground mt-1">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          <span className="line-clamp-1">{event.location}</span>
+                        </div>
                       </div>
                       
                       <div className="flex items-center justify-between">
@@ -430,6 +475,15 @@ const FindEvents = () => {
         filters={activeFilters}
         onApplyFilters={applyFilters}
       />
+      
+      {/* More Events detail dialog */}
+      {selectedMoreEvent && (
+        <EventDetailDialog
+          event={selectedMoreEvent}
+          open={isMoreEventDetailOpen}
+          onOpenChange={setIsMoreEventDetailOpen}
+        />
+      )}
     </div>
   );
 };

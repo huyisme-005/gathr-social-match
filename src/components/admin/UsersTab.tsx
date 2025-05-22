@@ -5,19 +5,31 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Search, Download, UserPlus } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-import { User } from "@/types/admin"; // We'll create this type later
+import { User } from "@/contexts/AuthContext"; // Using the exported User type
+import { useAuth } from "@/contexts/AuthContext";
 
 interface UsersTabProps {
-  users: User[];
   usersPerPage: number;
   onExport: () => void;
   onAddUser: () => void;
 }
 
-const UsersTab: React.FC<UsersTabProps> = ({ users, usersPerPage, onExport, onAddUser }) => {
+const UsersTab: React.FC<UsersTabProps> = ({ usersPerPage, onExport, onAddUser }) => {
+  const { getAllUsers } = useAuth();
+  const [allUsers, setAllUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  
+  // Load users from AuthContext
+  useEffect(() => {
+    const users = getAllUsers();
+    setAllUsers(users);
+    
+    const indexOfLastUser = currentPage * usersPerPage;
+    const indexOfFirstUser = indexOfLastUser - usersPerPage;
+    setFilteredUsers(users.slice(indexOfFirstUser, indexOfLastUser));
+  }, [getAllUsers, currentPage, usersPerPage]);
   
   // Update user list when page or search changes
   useEffect(() => {
@@ -26,15 +38,15 @@ const UsersTab: React.FC<UsersTabProps> = ({ users, usersPerPage, onExport, onAd
     
     // Filter by search term if provided
     const filtered = searchTerm
-      ? users.filter(user => 
+      ? allUsers.filter(user => 
           user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.country.toLowerCase().includes(searchTerm.toLowerCase())
+          (user.country || '').toLowerCase().includes(searchTerm.toLowerCase())
         )
-      : users;
+      : allUsers;
     
     setFilteredUsers(filtered.slice(indexOfFirstUser, indexOfLastUser));
-  }, [currentPage, searchTerm, users, usersPerPage]);
+  }, [currentPage, searchTerm, allUsers, usersPerPage]);
   
   // Handle search
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,11 +57,11 @@ const UsersTab: React.FC<UsersTabProps> = ({ users, usersPerPage, onExport, onAd
   // Handle pagination
   const handleNextPage = () => {
     const maxPage = Math.ceil(
-      (searchTerm ? users.filter(user => 
+      (searchTerm ? allUsers.filter(user => 
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.country.toLowerCase().includes(searchTerm.toLowerCase())
-      ).length : users.length) / usersPerPage
+        (user.country || '').toLowerCase().includes(searchTerm.toLowerCase())
+      ).length : allUsers.length) / usersPerPage
     );
     
     if (currentPage < maxPage) {
@@ -61,6 +73,21 @@ const UsersTab: React.FC<UsersTabProps> = ({ users, usersPerPage, onExport, onAd
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
     }
+  };
+  
+  // Handle user status change
+  const handleToggleStatus = (user: User) => {
+    const newStatus = user.status === 'suspended' ? 'active' : 'suspended';
+    toast({
+      title: `User ${newStatus === 'suspended' ? 'suspended' : 'activated'}`,
+      description: `${user.name}'s account has been ${newStatus === 'suspended' ? 'suspended' : 'activated'}.`,
+    });
+    
+    // In a real app, this would update the database
+    // For demo, we'll just update the UI
+    setAllUsers(prev => 
+      prev.map(u => u.id === user.id ? { ...u, status: newStatus as 'active' | 'suspended' | 'premium' } : u)
+    );
   };
 
   return (
@@ -103,6 +130,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ users, usersPerPage, onExport, onAd
                   <th className="py-3 px-4 text-left">Name</th>
                   <th className="py-3 px-4 text-left">Email</th>
                   <th className="py-3 px-4 text-left">Country</th>
+                  <th className="py-3 px-4 text-left">Joined</th>
                   <th className="py-3 px-4 text-left">Status</th>
                   <th className="py-3 px-4 text-left">Actions</th>
                 </tr>
@@ -112,23 +140,38 @@ const UsersTab: React.FC<UsersTabProps> = ({ users, usersPerPage, onExport, onAd
                   <tr key={user.id} className="border-t">
                     <td className="py-3 px-4">{user.name}</td>
                     <td className="py-3 px-4">{user.email}</td>
-                    <td className="py-3 px-4">{user.country}</td>
+                    <td className="py-3 px-4">{user.country || 'Unknown'}</td>
+                    <td className="py-3 px-4">{user.createdAt || 'Unknown'}</td>
                     <td className="py-3 px-4">
                       <span className={`px-2 py-1 rounded-full text-xs ${
                         user.status === 'active' ? 'bg-green-100 text-green-700' : 
                         user.status === 'premium' ? 'bg-amber-100 text-amber-700' : 
                         'bg-red-100 text-red-700'
                       }`}>
-                        {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+                        {user.status ? (user.status.charAt(0).toUpperCase() + user.status.slice(1)) : 'Active'}
                       </span>
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex gap-2">
                         <Button variant="ghost" size="sm">Edit</Button>
-                        {user.status !== 'suspended' ? (
-                          <Button variant="ghost" size="sm" className="text-red-500">Suspend</Button>
+                        {(user.status === 'suspended' || !user.status) ? (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-green-500" 
+                            onClick={() => handleToggleStatus(user)}
+                          >
+                            Activate
+                          </Button>
                         ) : (
-                          <Button variant="ghost" size="sm" className="text-green-500">Activate</Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-red-500"
+                            onClick={() => handleToggleStatus(user)}
+                          >
+                            Suspend
+                          </Button>
                         )}
                       </div>
                     </td>
@@ -142,12 +185,12 @@ const UsersTab: React.FC<UsersTabProps> = ({ users, usersPerPage, onExport, onAd
             <div className="text-sm text-muted-foreground">
               Showing {filteredUsers.length} of {
                 searchTerm 
-                  ? users.filter(user => 
+                  ? allUsers.filter(user => 
                       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      user.country.toLowerCase().includes(searchTerm.toLowerCase())
+                      (user.country || '').toLowerCase().includes(searchTerm.toLowerCase())
                     ).length 
-                  : users.length
+                  : allUsers.length
               } users
             </div>
             <div className="flex gap-2">
@@ -165,11 +208,11 @@ const UsersTab: React.FC<UsersTabProps> = ({ users, usersPerPage, onExport, onAd
                 onClick={handleNextPage}
                 disabled={
                   currentPage >= Math.ceil(
-                    (searchTerm ? users.filter(user => 
+                    (searchTerm ? allUsers.filter(user => 
                       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      user.country.toLowerCase().includes(searchTerm.toLowerCase())
-                    ).length : users.length) / usersPerPage
+                      (user.country || '').toLowerCase().includes(searchTerm.toLowerCase())
+                    ).length : allUsers.length) / usersPerPage
                   )
                 }
               >
