@@ -5,31 +5,26 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Search, Download, UserPlus } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-import { User } from "@/contexts/AuthContext"; // Using the exported User type
+import { User } from "@/types/admin"; // Using the exported User type
 import { useAuth } from "@/contexts/AuthContext";
 
 interface UsersTabProps {
+  users: User[];
   usersPerPage: number;
   onExport: () => void;
   onAddUser: () => void;
 }
 
-const UsersTab: React.FC<UsersTabProps> = ({ usersPerPage, onExport, onAddUser }) => {
-  const { getAllUsers } = useAuth();
-  const [allUsers, setAllUsers] = useState<User[]>([]);
+const UsersTab: React.FC<UsersTabProps> = ({ 
+  users: initialUsers,
+  usersPerPage, 
+  onExport, 
+  onAddUser 
+}) => {
+  const [allUsers, setAllUsers] = useState<User[]>(initialUsers);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  
-  // Load users from AuthContext
-  useEffect(() => {
-    const users = getAllUsers();
-    setAllUsers(users);
-    
-    const indexOfLastUser = currentPage * usersPerPage;
-    const indexOfFirstUser = indexOfLastUser - usersPerPage;
-    setFilteredUsers(users.slice(indexOfFirstUser, indexOfLastUser));
-  }, [getAllUsers, currentPage, usersPerPage]);
   
   // Update user list when page or search changes
   useEffect(() => {

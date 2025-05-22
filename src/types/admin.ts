@@ -1,6 +1,8 @@
+
 import { User } from "@/contexts/AuthContext";
 
 // Export User type from the AuthContext
+export { User };
 
 export interface AdminMetrics {
   totalUsers: number;
@@ -42,4 +44,51 @@ export interface SecurityThreat {
   affectedUsers?: number;
 }
 
-// More admin-specific types can be added here
+export interface AdminMetricsProps {
+  activeUsers: number;
+  totalEvents: number;
+  conversionRate: number;
+  securityAlertCount: number;
+  growthRate?: {
+    users?: number;
+    events?: number;
+    conversion?: number;
+    security?: number;
+  };
+}
+
+export interface SecurityAlert {
+  id: number;
+  type: 'critical' | 'warning' | 'info';
+  title: string;
+  description: string;
+  timestamp: string;
+}
+
+export interface SecurityReport {
+  generatedAt: string;
+  summary: {
+    totalAlerts: number;
+    criticalAlerts: number;
+    highAlerts: number;
+    mediumAlerts: number;
+    resolvedAlerts: number;
+  };
+  loginActivity: {
+    successfulLogins: number;
+    failedLogins: number;
+    suspiciousLogins: number;
+  };
+  vulnerabilities: {
+    severity: 'high' | 'medium' | 'low';
+    description: string;
+    recommendation: string;
+  }[];
+}
+
+export interface NewUser {
+  name: string;
+  email: string;
+  country: string;
+  status: 'active' | 'premium' | 'suspended';
+}
