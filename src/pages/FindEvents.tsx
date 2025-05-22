@@ -40,8 +40,8 @@ const FindEvents = () => {
       // Get nearby events
       setNearbyEvents(enhancedEvents.slice(3, 7));
       
-      // Get more events (show all remaining events)
-      setMoreEvents(enhancedEvents.slice(7));
+      // Get more events (show all remaining events + custom events)
+      setMoreEvents([...enhancedEvents.slice(7), ...customMoreEvents]);
       
       setIsLoading(false);
     }, 1000);
@@ -50,6 +50,78 @@ const FindEvents = () => {
   const handleEventClick = (eventId: string) => {
     navigate(`/event/${eventId}`);
   };
+
+  // Add custom events for More Events section
+  const customMoreEvents: Event[] = [
+    {
+      id: "custom-1",
+      title: "Startup Pitch Night",
+      description: "Watch and vote for the best new startups in your city. Network with founders and investors.",
+      date: "2025-07-10",
+      time: "18:00",
+      location: "City Innovation Hub",
+      imageUrl: "https://images.unsplash.com/photo-1464983953574-0892a716854b",
+      capacity: 120,
+      attendees: 80,
+      categories: ["Business", "Networking", "Tech"],
+      creator: { id: "201", name: "Startup Org" },
+      matchScore: 92,
+      price: 25,
+      startTime: "18:00",
+      endTime: "21:00"
+    },
+    {
+      id: "custom-2",
+      title: "Outdoor Movie Marathon",
+      description: "Enjoy a night of classic films under the stars. Bring your own blanket!",
+      date: "2025-07-15",
+      time: "20:00",
+      location: "Central Park Lawn",
+      imageUrl: "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
+      capacity: 300,
+      attendees: 210,
+      categories: ["Entertainment", "Outdoors", "Social"],
+      creator: { id: "202", name: "City Events" },
+      matchScore: 88,
+      price: 12,
+      startTime: "20:00",
+      endTime: "01:00"
+    },
+    {
+      id: "custom-3",
+      title: "Vegan Food Festival",
+      description: "Taste the best vegan dishes from local chefs and food trucks. Live music and workshops included.",
+      date: "2025-07-20",
+      time: "11:00",
+      location: "Riverfront Plaza",
+      imageUrl: "https://images.unsplash.com/photo-1519864600265-abb23847ef2c",
+      capacity: 500,
+      attendees: 350,
+      categories: ["Food & Drink", "Wellness", "Music"],
+      creator: { id: "203", name: "Vegan Society" },
+      matchScore: 85,
+      price: 8,
+      startTime: "11:00",
+      endTime: "17:00"
+    },
+    {
+      id: "custom-4",
+      title: "Board Game Social",
+      description: "Meet new friends and play your favorite board games. All skill levels welcome!",
+      date: "2025-07-25",
+      time: "19:00",
+      location: "Community Center Room B",
+      imageUrl: "https://images.unsplash.com/photo-1519125323398-675f0ddb6308",
+      capacity: 60,
+      attendees: 40,
+      categories: ["Gaming", "Social", "Entertainment"],
+      creator: { id: "204", name: "Board Gamers Club" },
+      matchScore: 80,
+      price: 5,
+      startTime: "19:00",
+      endTime: "23:00"
+    }
+  ];
 
   return (
     <div className="space-y-6">
