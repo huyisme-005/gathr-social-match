@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 // Define user type with all necessary fields
@@ -122,7 +121,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("favoriteEvents", JSON.stringify(favorites));
   }, [favorites]);
 
-  // Login function
+  // Login function - Fixed to ensure proper authentication
   const login = (email: string, password: string): boolean => {
     console.log("Login attempt:", email, password);
     const foundUser = users.find(u => u.email === email && u.password === password);
@@ -130,10 +129,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (foundUser) {
       console.log("User found:", foundUser);
       // Create a copy without the password for storage
-      const { password, ...userWithoutPassword } = foundUser;
+      const { password: _, ...userWithoutPassword } = foundUser;
+      
+      // Update state and localStorage
       setUser(userWithoutPassword);
       setIsAuthenticated(true);
       localStorage.setItem("currentUser", JSON.stringify(userWithoutPassword));
+      
+      console.log("Authentication state updated:", {
+        isAuthenticated: true,
+        user: userWithoutPassword
+      });
+      
       return true;
     }
     

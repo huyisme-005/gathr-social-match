@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
@@ -24,7 +25,7 @@ const Login = () => {
   const navigate = useNavigate();
   
   // Handle email/password login
-  const handleEmailLogin = (e: React.FormEvent) => {
+  const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {

@@ -8,13 +8,26 @@ const AuthLayout = () => {
   const { isAuthenticated, hasCompletedPersonalityTest } = useAuth();
   const location = useLocation();
   
-  // Redirect logic
-  if (isAuthenticated && location.pathname !== "/personality-test") {
-    return <Navigate to="/find-events" />;
-  }
+  // Debug auth state
+  useEffect(() => {
+    console.log("AuthLayout auth state:", { 
+      isAuthenticated, 
+      hasCompletedPersonalityTest,
+      currentPath: location.pathname 
+    });
+  }, [isAuthenticated, hasCompletedPersonalityTest, location.pathname]);
   
-  if (isAuthenticated && !hasCompletedPersonalityTest && location.pathname !== "/personality-test") {
-    return <Navigate to="/personality-test" />;
+  // Redirect logic - Ensure this works correctly
+  if (isAuthenticated) {
+    if (location.pathname === "/" || location.pathname === "/login" || location.pathname === "/register") {
+      if (!hasCompletedPersonalityTest) {
+        console.log("Redirecting to personality test");
+        return <Navigate to="/personality-test" replace />;
+      } else {
+        console.log("Redirecting to find events");
+        return <Navigate to="/find-events" replace />;
+      }
+    }
   }
 
   return (
