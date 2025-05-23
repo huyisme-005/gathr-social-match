@@ -5,6 +5,9 @@
  * This is the landing page of the application, shown to users who are not logged in.
  * It contains the Gathr logo, a brief description of the app, and buttons to login or register.
  * If the user is already authenticated, they are redirected to the appropriate page.
+ * 
+ * @author Huy Le (huyisme-005)
+ * @organization Gathr
  */
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";

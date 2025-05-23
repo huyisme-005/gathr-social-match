@@ -1,4 +1,9 @@
-
+/**
+ * AdminMetrics Component
+ * This component displays various metrics for the admin dashboard.
+ * @author Huy Le (huyisme-005)
+ * @organization Gathr
+ */
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminMetricsProps } from "@/types/admin";

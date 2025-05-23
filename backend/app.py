@@ -1,4 +1,7 @@
 """
+@file app.py
+@author Huy Le (huyisme-005)
+@organization Gathr
 Gathr Backend Application
 
 This is the main entry point for the Gathr backend Flask API.

@@ -1,5 +1,7 @@
 
 """
+@author Huy Le (huyisme-005)
+@organization Gathr
 Run Script for Gathr Backend
 
 This script initializes and runs the Gathr Flask application

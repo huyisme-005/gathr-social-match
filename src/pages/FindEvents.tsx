@@ -6,7 +6,8 @@
  * It displays a list of events with infinite scrolling, search functionality,
  * and filtering options. Events are recommended based on the user's personality.
  * 
- * @author Lovable AI
+ * @author Huy Le (huyisme-005)
+ * @organization Gathr
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";

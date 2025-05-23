@@ -4,6 +4,9 @@
  * 
  * This component allows users to view and select different subscription tiers.
  * It displays the free tier alongside paid premium and enterprise options with their features.
+ * 
+ * @author Huy Le (huyisme-005)
+ * @organization Gathr
  */
 import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";

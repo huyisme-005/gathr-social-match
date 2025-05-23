@@ -1,4 +1,9 @@
-
+/**
+ * SecurityReportDialog Component
+ * This component displays a dialog for viewing a security report.
+ * @author Huy Le (huyisme-005)
+ * @organization Gathr
+ */
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";

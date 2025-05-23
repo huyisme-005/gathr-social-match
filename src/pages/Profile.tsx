@@ -4,6 +4,9 @@
  * 
  * This page displays the user's profile information and allows them to edit it.
  * It includes sections for personal info, preferences, and account management.
+ * 
+ * @author Huy Le (huyisme-005)
+ * @organization Gathr
  */
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";

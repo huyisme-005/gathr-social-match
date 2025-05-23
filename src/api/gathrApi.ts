@@ -1,5 +1,6 @@
 
 /**
+ * @author Huy Le (huyisme-005)
  * Gathr API Client
  * 
  * This module provides functions to interact with the Gathr backend API.

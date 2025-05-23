@@ -5,7 +5,8 @@
  * This page displays detailed information about an event.
  * It shows the event image, title, details, and allows booking.
  * 
- * @author Lovable AI
+ * @author Huy Le (huyisme-005)
+ * @organization Gathr
  */
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";

@@ -1,5 +1,9 @@
 
 """
+@file models.py
+@author Huy Le (huyisme-005)
+@organization Gathr
+
 Database Models for Gathr Application
 
 This module defines the SQLAlchemy ORM models for the Gathr application.

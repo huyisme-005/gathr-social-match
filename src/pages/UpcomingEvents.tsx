@@ -4,6 +4,9 @@
  * 
  * This component displays a tabbed interface showing events the user has booked
  * and events the user has created. It allows the user to manage their events.
+ * 
+ * @author Huy Le (huyisme-005)
+ * @organization Gathr
  */
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

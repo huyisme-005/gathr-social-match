@@ -1,4 +1,9 @@
-
+/**
+ * AddUserDialog Component
+ * This component displays a dialog for adding a new user.
+ * @author Huy Le (huyisme-005)
+ * @organization Gathr
+ */
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";

@@ -1,5 +1,8 @@
 
 """
+@file database.py
+@author Huy Le (huyisme-005)
+@organization Gathr
 Database Configuration Module
 
 This module configures the SQLAlchemy database connection and session

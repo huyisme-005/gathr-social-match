@@ -1,5 +1,8 @@
 
 """
+@file ai.py
+@author Huy Le (huyisme-005)
+@organization Gathr
 AI Module for Personality Analysis and Event Matching
 
 This module contains AI-powered functionality for:

@@ -1,7 +1,8 @@
 
 # Gathr - Event Discovery & Social Platform
 
-**Author: Lovable AI**
+**Author: Huy Le (huyisme-005)**
+
 
 A modern React-based event discovery platform that helps users find and attend events based on their personality and preferences. Built with React, TypeScript, Tailwind CSS, and Shadcn UI components.
 

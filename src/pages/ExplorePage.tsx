@@ -4,6 +4,8 @@
  * 
  * This page helps users discover events by categories, location, and popularity.
  * It provides a more guided discovery experience than the general search.
+ * @author Huy Le (huyisme-005)
+ * @organization Gathr
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";

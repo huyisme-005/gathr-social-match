@@ -5,6 +5,9 @@
  * This component is displayed when a user navigates to a route that doesn't exist.
  * It provides a simple 404 error message and a link back to the home page.
  * It also logs the attempted route to the console for debugging purposes.
+ * 
+ * @author Huy Le (huyisme-005)
+ * @organization Gathr
  */
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";

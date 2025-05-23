@@ -1,4 +1,9 @@
-
+/**
+ * AnalyticsTab Component
+ * This component displays various analytics charts and graphs for the admin dashboard.
+ * @author Huy Le (huyisme-005)
+ * @organization Gathr
+ */
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";

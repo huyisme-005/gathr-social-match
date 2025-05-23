@@ -3,6 +3,9 @@
  * TicketsPage Component
  * 
  * This page displays all events that the user has booked tickets for.
+ * 
+ * @author Huy Le (huyisme-005)
+ * @organization Gathr
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";

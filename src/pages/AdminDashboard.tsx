@@ -3,6 +3,8 @@
  * 
  * Platform owner dashboard that provides analytics, user management,
  * security monitoring, and other admin features.
+ * @author Huy Le (huyisme-005)
+ * @organization Gathr
  */
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";

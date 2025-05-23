@@ -5,6 +5,9 @@
  * This component displays the user's connections and allows them to interact
  * with their Gathr Circle - the users they've connected with at events.
  * It provides options to message, call, and manage connections.
+ * 
+ * @author Huy Le (huyisme-005)
+ * @organization Gathr
  */
 import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
