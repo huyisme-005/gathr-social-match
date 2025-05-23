@@ -163,6 +163,12 @@ Benefits:
 - **Edge Functions**: Serverless backend logic
 - **Real-time Subscriptions**: Live data updates
 
+## Issues
+
+- Events in More Events haven't been added to the list of Favorites after clicking their hearts yet.
+- Payment is still demo.
+- Certain button hasn't worked as required.
+
 ## Project Structure
 
 ```
