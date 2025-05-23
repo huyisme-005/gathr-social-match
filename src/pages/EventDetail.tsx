@@ -1,8 +1,11 @@
+
 /**
  * EventDetail Page
  * 
  * This page displays detailed information about an event.
  * It shows the event image, title, details, and allows booking.
+ * 
+ * @author Lovable AI
  */
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";

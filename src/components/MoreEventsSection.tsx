@@ -4,7 +4,10 @@
  * 
  * This component displays the "More Events" section on the home page.
  * It shows events in a list format with proper favorite functionality and navigation.
+ * 
+ * @author Lovable AI
  */
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Heart, Clock } from "lucide-react";
@@ -21,19 +24,32 @@ interface MoreEventsSectionProps {
 const MoreEventsSection = ({ events, isLoading, onEventClick }: MoreEventsSectionProps) => {
   const { getFavoriteEvents, toggleEventFavorite } = useAuth();
   const navigate = useNavigate();
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const displayedEvents = isExpanded ? events : events.slice(0, 3);
 
   const handleFavoriteToggle = (eventId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    toggleEventFavorite(eventId);
     
     const favoriteEvents = getFavoriteEvents();
-    const isFavorite = favoriteEvents.includes(eventId);
+    const wasFavorite = favoriteEvents.includes(eventId);
+    
+    toggleEventFavorite(eventId);
+    
     const event = events.find(e => e.id === eventId);
     
-    if (isFavorite) {
-      toast.success(`Added ${event?.title} to favorites`);
-    } else {
+    if (wasFavorite) {
       toast.info(`Removed ${event?.title} from favorites`);
+    } else {
+      toast.success(`Added ${event?.title} to favorites`);
+    }
+  };
+
+  const handleViewAllToggle = () => {
+    if (isExpanded) {
+      setIsExpanded(false);
+    } else {
+      setIsExpanded(true);
     }
   };
 
@@ -44,9 +60,9 @@ const MoreEventsSection = ({ events, isLoading, onEventClick }: MoreEventsSectio
         <Button 
           variant="link" 
           className="text-xs text-green-500 p-0"
-          onClick={() => navigate("/explore")}
+          onClick={handleViewAllToggle}
         >
-          View all
+          {isExpanded ? 'Collapse' : 'View all'}
         </Button>
       </div>
       
@@ -61,7 +77,7 @@ const MoreEventsSection = ({ events, isLoading, onEventClick }: MoreEventsSectio
         </div>
       ) : (
         <div className="space-y-4">
-          {events.map(event => {
+          {displayedEvents.map(event => {
             const favoriteEvents = getFavoriteEvents();
             const isFavorite = favoriteEvents.includes(event.id);
             

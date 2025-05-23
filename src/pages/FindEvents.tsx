@@ -5,6 +5,8 @@
  * This component is the main event discovery page of the application.
  * It displays a list of events with infinite scrolling, search functionality,
  * and filtering options. Events are recommended based on the user's personality.
+ * 
+ * @author Lovable AI
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -23,6 +25,8 @@ const FindEvents = () => {
   const [nearbyEvents, setNearbyEvents] = useState<Event[]>([]);
   const [moreEvents, setMoreEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isNearbyExpanded, setIsNearbyExpanded] = useState(false);
+  const [isTicketExpanded, setIsTicketExpanded] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   
@@ -54,6 +58,9 @@ const FindEvents = () => {
     navigate(`/event/${eventId}`);
   };
 
+  const displayedTicketEvents = isTicketExpanded ? bookedEvents : bookedEvents.slice(0, 2);
+  const displayedNearbyEvents = isNearbyExpanded ? nearbyEvents : nearbyEvents.slice(0, 4);
+
   return (
     <div className="space-y-6">
       {/* Header with greeting and notification */}
@@ -74,9 +81,9 @@ const FindEvents = () => {
           <Button 
             variant="link" 
             className="text-xs text-green-500 p-0"
-            onClick={() => navigate("/tickets")}
+            onClick={() => setIsTicketExpanded(!isTicketExpanded)}
           >
-            View all
+            {isTicketExpanded ? 'Collapse' : 'View all'}
           </Button>
         </div>
         
@@ -92,7 +99,7 @@ const FindEvents = () => {
         ) : bookedEvents.length > 0 ? (
           <ScrollArea className="w-full whitespace-nowrap pb-2">
             <div className="flex gap-4">
-              {bookedEvents.map(event => (
+              {displayedTicketEvents.map(event => (
                 <div 
                   key={event.id} 
                   className="w-40 shrink-0"
@@ -121,9 +128,9 @@ const FindEvents = () => {
           <Button 
             variant="link" 
             className="text-xs text-green-500 p-0"
-            onClick={() => navigate("/explore")}
+            onClick={() => setIsNearbyExpanded(!isNearbyExpanded)}
           >
-            View all
+            {isNearbyExpanded ? 'Collapse' : 'View all'}
           </Button>
         </div>
         
@@ -139,7 +146,7 @@ const FindEvents = () => {
         ) : (
           <ScrollArea className="w-full whitespace-nowrap pb-2">
             <div className="flex gap-4">
-              {nearbyEvents.map(event => (
+              {displayedNearbyEvents.map(event => (
                 <div 
                   key={event.id} 
                   className="w-40 shrink-0"

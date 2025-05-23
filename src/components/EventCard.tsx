@@ -5,6 +5,8 @@
  * This component displays a single event in a card format.
  * It shows event details and provides appropriate actions based on the user's
  * relationship to the event (attendee, creator, or potential attendee).
+ * 
+ * @author Lovable AI
  */
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
