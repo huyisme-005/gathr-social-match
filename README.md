@@ -1,5 +1,4 @@
 
-
 # Gathr - Social Event Matchmaking App
 
 Gathr is an AI-driven event platform that connects young professionals through curated events and personality-based matching.
@@ -23,6 +22,7 @@ Gathr is an AI-driven event platform that connects young professionals through c
 - **Favorites System**: Mark and unmark events as favorites with the heart icon on all event cards
 - **Consistent UI**: Uniform event card design across all sections of the app
 - **Clickable Event Navigation**: Direct navigation to event details from all sections including More Events
+- **Time Display**: Shows start and end times for all events in More Events section
 
 ### Navigation & Exploration
 - **Bottom Navigation**: Easy access to Home, Explore, Favorites, Tickets, and Profile sections
@@ -31,7 +31,7 @@ Gathr is an AI-driven event platform that connects young professionals through c
 - **Event Categories**: Browse events by specific categories with the quick-select badges
 - **Improved Home Layout**: Consistent card sizes in "Your Ticket Events" and "Explore Nearby" sections
 - **Event Collections**: Browse your booked events, nearby events, and expanded More Events collection
-- **Enhanced More Events**: Expanded collection with 15+ diverse events, all with images and heart functionality
+- **Enhanced More Events**: Expanded collection with 15+ diverse events, all with images, heart functionality, and proper navigation
 
 ### Admin Dashboard
 - **User Management**: View and manage all platform users
@@ -47,6 +47,11 @@ Gathr is an AI-driven event platform that connects young professionals through c
 - **Features**: Heart icon for favorites, consistent styling, price display, match scores
 - **Views**: Supports both grid (square) and list (rectangular) layouts
 - **Integration**: Used across Home, Explore, Favorites, and Tickets pages
+
+#### **MoreEventsSection** 
+- **Role**: Specialized component for displaying the "More Events" section on the home page
+- **Features**: List format display, heart functionality, time details, proper navigation
+- **Integration**: Extracted from FindEvents for better maintainability and separation of concerns
 
 #### **BottomNavbar** 
 - **Role**: Main navigation component providing access to all major app sections
@@ -82,9 +87,10 @@ Gathr is an AI-driven event platform that connects young professionals through c
 - **Sections**: 
   - Your Ticket Events (user's booked events)
   - Explore Nearby (location-based recommendations)
-  - More Events (expanded collection with 15+ diverse events)
-- **Features**: Infinite scrolling, heart functionality, consistent card sizes
+  - More Events (expanded collection with 15+ diverse events using MoreEventsSection component)
+- **Features**: Infinite scrolling, heart functionality, consistent card sizes, proper event navigation
 - **Navigation**: Direct links to event details and section-specific pages
+- **Refactoring**: Extracted MoreEventsSection component for better maintainability
 
 #### **ExplorePage** 
 - **Role**: Event discovery with comprehensive filtering and search
@@ -102,10 +108,18 @@ Gathr is an AI-driven event platform that connects young professionals through c
 #### **EventDetail** 
 - **Role**: Full-page detailed event information view
 - **Features**: Comprehensive event data, booking capabilities, social sharing
+- **Updates**: Now supports both mock events and custom more events with proper navigation
 
 #### **Profile** 
 - **Role**: User account management and preferences
 - **Features**: Personal information, preferences, account settings
+
+### Data Management
+
+#### **customMoreEvents.ts**
+- **Role**: Contains additional events specifically for the "More Events" section
+- **Features**: Complete event details, proper time information, diverse categories
+- **Integration**: Used alongside mock events to provide expanded event collection
 
 ### Layout Components
 
@@ -134,6 +148,23 @@ Gathr is an AI-driven event platform that connects young professionals through c
 - Consistent theming with dark/light mode support
 - Responsive design patterns
 - Accessibility features built-in
+
+## Recent Improvements
+
+### Bug Fixes
+- **Favorites Functionality**: Fixed heart icon functionality in More Events section to properly sync with favorites
+- **Event Navigation**: Ensured all More Events are clickable and navigate to detailed event pages
+- **Time Display**: Added start and end time information to all events in More Events section
+
+### Code Refactoring
+- **Component Separation**: Extracted MoreEventsSection from FindEvents.tsx for better maintainability
+- **Data Organization**: Created customMoreEvents.ts for better data management
+- **Event Detail Support**: Enhanced EventDetail page to support both mock and custom events
+
+### UI Enhancements
+- **Consistent Heart Icons**: All events now have properly functioning heart icons with toast feedback
+- **Time Information**: Added Clock icon and time details to More Events section
+- **Better Navigation**: Improved click handling and event routing across all sections
 
 ## Pages
 - **Home (FindEvents)**: Personalized feed showing booked events, nearby events, and expanded recommended events collection
@@ -328,11 +359,13 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
 - **Database connection**: Verify PostgreSQL is running and connection string is correct
 - **Missing dependencies**: Run `pip install -r requirements.txt` and `npm install`
 - **Image loading**: Some demo images use Unsplash links requiring internet connection
+- **Favorites sync**: Ensure proper event ID matching between different event sources
 
 ### Performance Considerations
 - **Event Loading**: Implement pagination for large event collections
 - **Image Optimization**: Consider using CDN for event images
 - **State Management**: Optimize React Query cache configuration for better performance
+- **Component Splitting**: Continue refactoring large components for better maintainability
 
 ### Scaling Recommendations
 - **Database**: Implement connection pooling and query optimization
@@ -349,6 +382,7 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
 - **Authentication Issues**: Check AuthContext state and ensure login credentials are correct
 - **Event Display Issues**: Verify event data structure matches Event type definition
 - **Heart Icon Issues**: Ensure getFavoriteEvents and toggleEventFavorite functions are properly imported from AuthContext
+- **Navigation Issues**: Verify event IDs match between different data sources (mockEvents vs customMoreEvents)
 
 ## Contributing
 1. Fork the repository
@@ -367,4 +401,3 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Lovable platform for the development environment
 - Flask community for the robust backend framework
 - Unsplash for providing demo event images
-

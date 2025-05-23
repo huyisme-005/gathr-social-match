@@ -1,4 +1,3 @@
-
 /**
  * EventDetail Page
  * 
@@ -9,6 +8,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Event } from "@/types/event";
 import { mockEvents } from "@/data/mockEvents";
+import { customMoreEvents } from "@/data/customMoreEvents";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Heart, Share2, Calendar, Clock, MapPin, Users, DollarSign } from "lucide-react";
@@ -32,15 +32,17 @@ const EventDetail = () => {
     
     // Simulate API call
     setTimeout(() => {
-      const foundEvent = mockEvents.find(event => event.id === id);
+      // Search in both mock events and custom events
+      const allEvents = [...mockEvents, ...customMoreEvents];
+      let foundEvent = allEvents.find(event => event.id === id);
       
       if (foundEvent) {
-        // Add additional properties to the event
+        // Add additional properties to the event if needed
         const enhancedEvent = {
           ...foundEvent,
-          price: Math.floor(Math.random() * 100) + 10,
-          startTime: `${foundEvent.time}`,
-          endTime: `${parseInt(foundEvent.time.split(':')[0]) + 2}:${foundEvent.time.split(':')[1]}`,
+          price: foundEvent.price || Math.floor(Math.random() * 100) + 10,
+          startTime: foundEvent.startTime || `${foundEvent.time}`,
+          endTime: foundEvent.endTime || `${parseInt(foundEvent.time.split(':')[0]) + 2}:${foundEvent.time.split(':')[1]}`,
         };
         
         setEvent(enhancedEvent);
