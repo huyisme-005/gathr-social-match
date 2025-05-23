@@ -9,19 +9,20 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell } from "lucide-react";
+import { Bell, Heart } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import EventCard from "@/components/EventCard";
 import { Event } from "@/types/event";
 import { mockEvents } from "@/data/mockEvents";
+import { toast } from "sonner";
 
 const FindEvents = () => {
   const [bookedEvents, setBookedEvents] = useState<Event[]>([]);
   const [nearbyEvents, setNearbyEvents] = useState<Event[]>([]);
   const [moreEvents, setMoreEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, getFavoriteEvents, toggleEventFavorite } = useAuth();
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -52,7 +53,24 @@ const FindEvents = () => {
     navigate(`/event/${eventId}`);
   };
 
-  // Add custom events for More Events section
+  // Handle favorite toggle for More Events section
+  const handleFavoriteToggle = (eventId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    toggleEventFavorite(eventId);
+    
+    const favoriteEvents = getFavoriteEvents();
+    const isFavorite = favoriteEvents.includes(eventId);
+    
+    if (!isFavorite) {
+      const event = moreEvents.find(e => e.id === eventId);
+      toast.success(`Added ${event?.title} to favorites`);
+    } else {
+      const event = moreEvents.find(e => e.id === eventId);
+      toast.info(`Removed ${event?.title} from favorites`);
+    }
+  };
+
+  // Add custom events for More Events section with images
   const customMoreEvents: Event[] = [
     {
       id: "custom-1",
@@ -223,6 +241,91 @@ const FindEvents = () => {
       price: 25,
       startTime: "09:00",
       endTime: "11:00"
+    },
+    {
+      id: "custom-11",
+      title: "Photography Walk",
+      description: "Capture the beauty of urban landscapes with professional photographers.",
+      date: "2025-08-22",
+      time: "14:00",
+      location: "Downtown District",
+      imageUrl: "https://images.unsplash.com/photo-1452780212940-6f5c0d14d848",
+      capacity: 20,
+      attendees: 15,
+      categories: ["Photography", "Outdoors", "Creative"],
+      creator: { id: "211", name: "Photo Club" },
+      matchScore: 77,
+      price: 15,
+      startTime: "14:00",
+      endTime: "17:00"
+    },
+    {
+      id: "custom-12",
+      title: "Cooking Masterclass",
+      description: "Learn to prepare gourmet dishes with professional chefs.",
+      date: "2025-08-25",
+      time: "17:00",
+      location: "Culinary Institute",
+      imageUrl: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136",
+      capacity: 16,
+      attendees: 12,
+      categories: ["Food & Drink", "Educational", "Creative"],
+      creator: { id: "212", name: "Culinary School" },
+      matchScore: 86,
+      price: 75,
+      startTime: "17:00",
+      endTime: "20:00"
+    },
+    {
+      id: "custom-13",
+      title: "Book Club Meeting",
+      description: "Discuss this month's featured novel with fellow book lovers.",
+      date: "2025-08-28",
+      time: "18:30",
+      location: "City Library",
+      imageUrl: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570",
+      capacity: 25,
+      attendees: 18,
+      categories: ["Literary", "Social", "Educational"],
+      creator: { id: "213", name: "Book Lovers Society" },
+      matchScore: 71,
+      price: 0,
+      startTime: "18:30",
+      endTime: "20:30"
+    },
+    {
+      id: "custom-14",
+      title: "Dance Workshop",
+      description: "Learn contemporary dance moves in a supportive environment.",
+      date: "2025-09-01",
+      time: "16:00",
+      location: "Dance Studio Central",
+      imageUrl: "https://images.unsplash.com/photo-1547036967-23d11aacaee0",
+      capacity: 30,
+      attendees: 22,
+      categories: ["Dance", "Fitness", "Creative"],
+      creator: { id: "214", name: "Dance Academy" },
+      matchScore: 84,
+      price: 35,
+      startTime: "16:00",
+      endTime: "18:00"
+    },
+    {
+      id: "custom-15",
+      title: "Volunteer Beach Cleanup",
+      description: "Help preserve our coastline while meeting environmentally conscious people.",
+      date: "2025-09-05",
+      time: "09:00",
+      location: "Sunrise Beach",
+      imageUrl: "https://images.unsplash.com/photo-1559827260-dc66d52bef19",
+      capacity: 50,
+      attendees: 35,
+      categories: ["Environmental", "Volunteer", "Outdoors"],
+      creator: { id: "215", name: "Green Earth Initiative" },
+      matchScore: 79,
+      price: 0,
+      startTime: "09:00",
+      endTime: "12:00"
     }
   ];
 
@@ -352,30 +455,46 @@ const FindEvents = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {moreEvents.map(event => (
-              <div 
-                key={event.id}
-                className="bg-card rounded-2xl overflow-hidden shadow cursor-pointer relative w-full mb-2 flex h-28 md:h-32"
-                onClick={() => handleEventClick(event.id)}
-              >
-                {/* Event image */}
+            {moreEvents.map(event => {
+              const favoriteEvents = getFavoriteEvents();
+              const isFavorite = favoriteEvents.includes(event.id);
+              
+              return (
                 <div 
-                  className="more-event-image w-1/3"
-                  data-img={event.imageUrl} // for debugging, not used in rendering
-                />
-                {/* Event details */}
-                <div className="w-2/3 p-3 flex flex-col justify-between">
-                  <div>
-                    <h3 className="font-medium text-base line-clamp-1">{event.title}</h3>
-                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{event.location}</p>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-muted-foreground">{new Date(event.date).toLocaleDateString()}</p>
-                    <p className="text-xs font-medium">${event.price}</p>
+                  key={event.id}
+                  className="bg-card rounded-2xl overflow-hidden shadow cursor-pointer relative w-full mb-2 flex h-28 md:h-32"
+                  onClick={() => handleEventClick(event.id)}
+                >
+                  {/* Event image */}
+                  <div 
+                    className="w-1/3 bg-cover bg-center"
+                    style={{ backgroundImage: `url(${event.imageUrl})` }}
+                  />
+                  
+                  {/* Event details */}
+                  <div className="w-2/3 p-3 flex flex-col justify-between relative">
+                    {/* Favorite button */}
+                    <button 
+                      className="absolute top-2 right-2 p-1.5 bg-black/10 hover:bg-black/20 rounded-full transition-colors"
+                      onClick={(e) => handleFavoriteToggle(event.id, e)}
+                    >
+                      <Heart 
+                        className={`h-4 w-4 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} 
+                      />
+                    </button>
+                    
+                    <div>
+                      <h3 className="font-medium text-base line-clamp-1">{event.title}</h3>
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{event.location}</p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-muted-foreground">{new Date(event.date).toLocaleDateString()}</p>
+                      <p className="text-xs font-medium">${event.price}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
