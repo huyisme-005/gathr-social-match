@@ -1,3 +1,4 @@
+
 /**
  * FindEvents Page (Home)
  * 
@@ -120,6 +121,108 @@ const FindEvents = () => {
       price: 5,
       startTime: "19:00",
       endTime: "23:00"
+    },
+    {
+      id: "custom-5",
+      title: "Digital Art Workshop",
+      description: "Learn digital art techniques with professional artists. Tablets and software provided.",
+      date: "2025-08-01",
+      time: "13:00",
+      location: "Creative Space Studio",
+      imageUrl: "https://images.unsplash.com/photo-1541961017774-22349e4a1262",
+      capacity: 25,
+      attendees: 18,
+      categories: ["Arts", "Tech", "Creative"],
+      creator: { id: "205", name: "Digital Artists Guild" },
+      matchScore: 75,
+      price: 60,
+      startTime: "13:00",
+      endTime: "17:00"
+    },
+    {
+      id: "custom-6",
+      title: "Hiking Adventure",
+      description: "Explore scenic mountain trails with experienced guides. All fitness levels welcome.",
+      date: "2025-08-05",
+      time: "08:00",
+      location: "Mountain Trail Head",
+      imageUrl: "https://images.unsplash.com/photo-1551632811-561732d1e306",
+      capacity: 40,
+      attendees: 32,
+      categories: ["Outdoors", "Fitness", "Adventure"],
+      creator: { id: "206", name: "Hiking Club" },
+      matchScore: 70,
+      price: 20,
+      startTime: "08:00",
+      endTime: "16:00"
+    },
+    {
+      id: "custom-7",
+      title: "Wine Tasting Evening",
+      description: "Sample premium wines from local vineyards with expert sommelier guidance.",
+      date: "2025-08-08",
+      time: "19:00",
+      location: "Wine Bar & Bistro",
+      imageUrl: "https://images.unsplash.com/photo-1554490712-b2515a5d8f8d",
+      capacity: 30,
+      attendees: 25,
+      categories: ["Food & Drink", "Social", "Cultural"],
+      creator: { id: "207", name: "Wine Society" },
+      matchScore: 82,
+      price: 45,
+      startTime: "19:00",
+      endTime: "22:00"
+    },
+    {
+      id: "custom-8",
+      title: "Coding Bootcamp",
+      description: "Intensive coding workshop covering modern web development technologies.",
+      date: "2025-08-12",
+      time: "10:00",
+      location: "Tech Academy",
+      imageUrl: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3",
+      capacity: 50,
+      attendees: 38,
+      categories: ["Tech", "Educational", "Professional"],
+      creator: { id: "208", name: "Code Academy" },
+      matchScore: 90,
+      price: 120,
+      startTime: "10:00",
+      endTime: "18:00"
+    },
+    {
+      id: "custom-9",
+      title: "Jazz Night",
+      description: "Enjoy live jazz performances from local musicians in an intimate setting.",
+      date: "2025-08-15",
+      time: "20:30",
+      location: "Jazz Lounge",
+      imageUrl: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f",
+      capacity: 80,
+      attendees: 65,
+      categories: ["Music", "Entertainment", "Cultural"],
+      creator: { id: "209", name: "Jazz Society" },
+      matchScore: 73,
+      price: 30,
+      startTime: "20:30",
+      endTime: "23:30"
+    },
+    {
+      id: "custom-10",
+      title: "Mindfulness Meditation",
+      description: "Learn meditation techniques for stress relief and mental clarity.",
+      date: "2025-08-18",
+      time: "09:00",
+      location: "Wellness Center",
+      imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+      capacity: 35,
+      attendees: 28,
+      categories: ["Wellness", "Spiritual", "Self-Care"],
+      creator: { id: "210", name: "Mindfulness Center" },
+      matchScore: 68,
+      price: 25,
+      startTime: "09:00",
+      endTime: "11:00"
     }
   ];
 
