@@ -363,7 +363,7 @@ const Profile = () => {
       <Button
         variant="outline"
         className="w-full mb-2"
-        onClick={() => navigate("/auth/personality-test")}
+        onClick={() => navigate("/personality-test")}
       >
         Retake Personality Test
       </Button>
