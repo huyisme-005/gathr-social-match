@@ -175,25 +175,25 @@ Benefits:
 ```
 src/
 ├── components/          # Reusable UI components
-│   ├── ui/             # Shadcn UI components
+│   ├── ui/             # Shadcn UI components, providing a standardized design system.
 │   ├── admin/          # Admin-specific components
 │   └── MoreEventsSection.tsx  # Event list component
-├── contexts/           # React context providers
-├── data/              # Mock data and configurations
-├── hooks/             # Custom React hooks
-├── layouts/           # Page layout components
-├── lib/               # Utility functions
+├── contexts/          # React context providers, facilitating global state management across the app.
+├── data/              # Mock data and configurations, useful for local development and testing
+├── hooks/             # Custom React hooks that encapsulate reusable logic, for code maintainability
+├── layouts/           # Page layout components in various operations.
+├── lib/               # Utility functions for operations like formatting data, handling API requests, or managing user input
 ├── pages/             # Route components
-│   ├── auth/          # Authentication pages
-│   └── FindEvents.tsx # Main discovery page
-└── types/             # TypeScript type definitions
+│   ├── auth/          # Authentication pages (e.g., login, sign-up).
+│   └── FindEvents.tsx # Main discovery page 
+└── types/             # TypeScript type definitions, ensuring type safety across components and hooks.
 
 backend/
-├── app.py             # Flask application
+├── app.py             # Main Flask application, responsible for routing requests and serving responses.
 ├── models.py          # Database models
-├── ai.py              # AI recommendation engine
-├── database.py        # Database configuration
-└── requirements.txt   # Python dependencies
+├── ai.py              # AI recommendation engine to suggest events based on user preferences, past interactions, or trending activities.
+├── database.py        # Database configuration, ensuring connections are properly managed and optimized for performance.
+└── requirements.txt   # Python dependencies for backend
 ```
 
 ## Contributing
