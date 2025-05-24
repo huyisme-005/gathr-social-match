@@ -1,4 +1,3 @@
-
 /**
  * Profile Page
  * 
@@ -361,6 +360,13 @@ const Profile = () => {
         </TabsContent>
       </Tabs>
       
+      <Button
+        variant="outline"
+        className="w-full mb-2"
+        onClick={() => navigate("/auth/personality-test")}
+      >
+        Retake Personality Test
+      </Button>
       <Button
         variant="outline"
         className="w-full"
