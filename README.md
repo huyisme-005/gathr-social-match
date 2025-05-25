@@ -6,6 +6,8 @@
 
 A modern React-based event discovery platform that helps users find and attend events based on their personality and preferences. Built with React, TypeScript, Tailwind CSS, and Shadcn UI components.
 
+Link: https://gathr-social-match.lovable.app/
+
 ## Recent Updates
 
 ### Latest Improvements
