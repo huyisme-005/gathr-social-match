@@ -1,48 +1,148 @@
+/**
+ * @file AuthContext.tsx
+ * @description This file defines the authentication context for the application.
+ * It handles user authentication, registration, session management, profile updates,
+ * and provides user-related data to components throughout the application.
+ * User data and authentication state are persisted in localStorage.
+ * @version 1.1.0
+ */
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-// Define user type with all necessary fields
+/**
+ * @interface User
+ * @description Defines the structure for a user object within the application.
+ */
 export interface User {
+  /** User's unique identifier. */
   id: string;
+  /** User's full name. */
   name: string;
+  /** User's email address, used for login and identification. */
   email: string;
-  password?: string; // Only used internally
+  /** 
+   * User's password. 
+   * @internal This is only used during registration and login checks. 
+   * It should never be stored in the 'currentUser' state that's exposed or persisted in localStorage for the current user without hashing (in a real app).
+   * In this mock setup, it's stored in plaintext within the 'internalUsers' list for demo purposes.
+   */
+  password?: string;
+  /** ISO string representing the date and time the user account was created. */
   createdAt?: string;
+  /** Flag indicating if the user has completed their personality test. */
   hasCompletedPersonalityTest: boolean;
+  /** Array of strings representing personality tags derived from the test. */
   personalityTags?: string[];
+  /** User's country of residence. */
   country?: string;
+  /** Current status of the user account. */
   status: "active" | "premium" | "suspended";
+  /** Flag indicating if the user has administrative privileges. */
   isAdmin?: boolean;
-  tier?: "free" | "premium" | "enterprise"; // Added tier property
-  isCorporate?: boolean; // Added isCorporate property
+  /** The subscription tier of the user. */
+  tier?: "free" | "premium" | "enterprise";
+  /** Flag indicating if the user account is a corporate account. */
+  isCorporate?: boolean;
 }
 
-// Define context type
+/**
+ * @interface AuthContextType
+ * @description Defines the shape of the authentication context, including state and action dispatchers.
+ */
 interface AuthContextType {
+  /** Indicates whether a user is currently authenticated. */
   isAuthenticated: boolean;
+  /** 
+   * The currently authenticated user object, or null if no user is logged in.
+   * This user object will NOT contain the password.
+   */
   user: User | null;
+  /** Indicates if the currently authenticated user is an administrator. */
   isAdmin: boolean;
+  /** Indicates if the currently authenticated user has completed the personality test. */
   hasCompletedPersonalityTest: boolean;
+  /**
+   * Attempts to log in a user with the given credentials.
+   * @param {string} email - The user's email.
+   * @param {string} password - The user's password.
+   * @returns {boolean} True if login is successful, false otherwise.
+   */
   login: (email: string, password: string) => boolean;
+  /**
+   * Attempts to register a new user.
+   * @param {string} name - The user's full name.
+   * @param {string} email - The user's email address.
+   * @param {string} password - The user's chosen password.
+   * @param {string} [country] - The user's country (optional).
+   * @returns {boolean} True if registration is successful, false otherwise (e.g., email already exists).
+   */
   register: (name: string, email: string, password: string, country?: string) => boolean;
+  /** Logs out the currently authenticated user. */
   logout: () => void;
+  /**
+   * Marks the current user's personality test as complete and stores their personality tags.
+   * @param {string[]} personalityTags - An array of personality tags.
+   */
   completePersonalityTest: (personalityTags: string[]) => void;
-  getAllUsers: () => User[];
-  updateUserProfile: (updates: Partial<User>) => void;
+  /**
+   * Retrieves a list of all users in the system (without their passwords).
+   * Intended for administrative purposes.
+   * @returns {Omit<User, 'password'>[]} An array of user objects, with passwords omitted.
+   */
+  getAllUsers: () => Omit<User, 'password'>[];
+  /**
+   * Updates the profile of the currently authenticated user.
+   * @param {Partial<Omit<User, 'password'>>} updates - An object containing the fields to update. Passwords cannot be updated via this method.
+   */
+  updateUserProfile: (updates: Partial<Omit<User, 'password'>>) => void;
+  /** Closes the account of the currently authenticated user, removing them from the system. */
   closeAccount: () => void;
+  /**
+   * Toggles an event's favorite status for the current user.
+   * @param {string} eventId - The ID of the event to toggle.
+   */
   toggleEventFavorite: (eventId: string) => void;
+  /**
+   * Retrieves a list of event IDs that the current user has marked as favorite.
+   * @returns {string[]} An array of favorite event IDs.
+   */
   getFavoriteEvents: () => string[];
-  socialLogin: (provider: string) => Promise<boolean>; // Added socialLogin function
-  phoneLogin: (phoneNumber: string, code: string) => Promise<boolean>; // Added phoneLogin function
-  upgradeTier: (tier: "premium" | "enterprise") => Promise<boolean>; // Added upgradeTier function
+  /**
+   * Handles social login (e.g., Google, Facebook).
+   * This is a mock implementation.
+   * @param {string} provider - The name of the social login provider (e.g., "google").
+   * @returns {Promise<boolean>} A promise that resolves to true if login is successful, false otherwise.
+   */
+  socialLogin: (provider: string) => Promise<boolean>;
+  /**
+   * Handles phone number based login.
+   * This is a mock implementation.
+   * @param {string} phoneNumber - The user's phone number.
+   * @param {string} code - The verification code sent to the phone number.
+   * @returns {Promise<boolean>} A promise that resolves to true if login is successful, false otherwise.
+   */
+  phoneLogin: (phoneNumber: string, code: string) => Promise<boolean>;
+  /**
+   * Upgrades the subscription tier of the currently authenticated user.
+   * @param {"premium" | "enterprise"} tier - The new tier to upgrade to.
+   * @returns {Promise<boolean>} A promise that resolves to true if the upgrade is successful, false otherwise.
+   */
+  upgradeTier: (tier: "premium" | "enterprise") => Promise<boolean>;
 }
 
-// Initial mock users with encrypted passwords
+/**
+ * @const initialUsers
+ * @description An array of predefined user objects for initializing the application.
+ * Passwords are in plaintext for demonstration purposes only. In a real application,
+ * passwords should be securely hashed.
+ * @type {User[]}
+ */
 const initialUsers: User[] = [
   {
     id: "1",
     name: "Admin User",
     email: "admin@example.com",
-    password: "admin123", // In a real app, this would be encrypted
+    password: "admin123",
     createdAt: "2024-01-15",
     hasCompletedPersonalityTest: true,
     personalityTags: ["tech", "music", "outdoors"],
@@ -55,7 +155,7 @@ const initialUsers: User[] = [
     id: "2",
     name: "John Doe",
     email: "you@example.com",
-    password: "password123", // In a real app, this would be encrypted
+    password: "password123",
     createdAt: "2024-02-20",
     hasCompletedPersonalityTest: true,
     personalityTags: ["food", "sports", "art"],
@@ -66,7 +166,31 @@ const initialUsers: User[] = [
   }
 ];
 
-// Create the context with default values
+/**
+ * Helper function to remove the password property from a user object.
+ * This is used before storing user data in contexts or localStorage where the password is not needed.
+ * @param {User} userObj - The user object, potentially containing a password.
+ * @returns {Omit<User, 'password'>} The user object without the password property.
+ */
+const stripPassword = (userObj: User): Omit<User, 'password'> => {
+  const { password, ...userWithoutPassword } = userObj;
+  return userWithoutPassword;
+};
+
+/**
+ * Helper function to remove the password property from an array of user objects.
+ * @param {User[]} usersArray - An array of user objects.
+ * @returns {Omit<User, 'password'>[]} An array of user objects, each without the password property.
+ */
+const stripPasswordsFromUsers = (usersArray: User[]): Omit<User, 'password'>[] => {
+    return usersArray.map(user => stripPassword(user));
+}
+
+/**
+ * @const AuthContext
+ * @description React context for authentication. Provides default values for the context type.
+ * @type {React.Context<AuthContextType>}
+ */
 export const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   user: null,
@@ -86,128 +210,194 @@ export const AuthContext = createContext<AuthContextType>({
   upgradeTier: async () => false
 });
 
-// Provider component that wraps the app and provides auth context
+/**
+ * @component AuthProvider
+ * @description Provides authentication context to its children components.
+ * Manages user state, authentication logic, and persistence to localStorage.
+ * @param {object} props - The component's props.
+ * @param {ReactNode} props.children - The child components to be wrapped by the provider.
+ * @returns {JSX.Element} The AuthProvider component.
+ */
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  // Check local storage for saved users and current user
-  const getSavedUsers = (): User[] => {
-    const usersJson = localStorage.getItem("users");
+  /**
+   * Retrieves the list of all users (including their passwords for internal authentication) from localStorage.
+   * If no users are found in localStorage, initializes with `initialUsers` and saves them.
+   * @returns {User[]} An array of all user objects.
+   */
+  const getSavedInternalUsers = (): User[] => {
+    const usersJson = localStorage.getItem("app_internal_users");
     if (usersJson) {
-      return JSON.parse(usersJson);
+      try {
+        return JSON.parse(usersJson);
+      } catch (e) {
+        console.error("Error parsing internal users from localStorage", e);
+      }
     }
+    // Fallback: save initial users if parsing fails or item doesn't exist
+    localStorage.setItem("app_internal_users", JSON.stringify(initialUsers));
     return initialUsers;
   };
 
-  const getSavedUser = (): User | null => {
-    const userJson = localStorage.getItem("currentUser");
-    return userJson ? JSON.parse(userJson) : null;
+  /**
+   * Retrieves the currently authenticated user's data (without password) from localStorage.
+   * @returns {User | null} The current user object if found and parsed correctly, otherwise null.
+   */
+  const getSavedCurrentUser = (): User | null => { 
+    const userJson = localStorage.getItem("app_current_user");
+    if (userJson) {
+      try {
+        return JSON.parse(userJson); // This user object should already be password-stripped
+      } catch (e) {
+        console.error("Error parsing current user from localStorage", e);
+        localStorage.removeItem("app_current_user"); // Clear potentially corrupted item
+      }
+    }
+    return null;
   };
 
-  // State to track authentication status and user info
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!getSavedUser());
-  const [user, setUser] = useState<User | null>(getSavedUser());
-  const [users, setUsers] = useState<User[]>(getSavedUsers());
+  /** 
+   * State for all registered users, including their passwords. 
+   * This is used for internal authentication checks (e.g., login).
+   * Persisted in localStorage under "app_internal_users".
+   * @type {[User[], React.Dispatch<React.SetStateAction<User[]>>]}
+   */
+  const [internalUsers, setInternalUsers] = useState<User[]>(getSavedInternalUsers());
+  
+  /** 
+   * State for the currently logged-in user's data.
+   * This object, when exposed via context or persisted, will NOT contain the password.
+   * Persisted in localStorage under "app_current_user" (without password).
+   * @type {[User | null, React.Dispatch<React.SetStateAction<User | null>>]}
+   */
+  const [currentUserData, setCurrentUserData] = useState<User | null>(getSavedCurrentUser());
+  
+  /** 
+   * State indicating if a user is currently authenticated.
+   * Derived from the presence of `currentUserData`.
+   * @type {[boolean, React.Dispatch<React.SetStateAction<boolean>>]}
+   */
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!currentUserData);
+  
+  /** 
+   * State for storing the IDs of events marked as favorite by the current user.
+   * Persisted in localStorage under "app_favorite_events".
+   * @type {[string[], React.Dispatch<React.SetStateAction<string[]>>]}
+   */
   const [favorites, setFavorites] = useState<string[]>(() => {
-    const saved = localStorage.getItem("favoriteEvents");
+    const saved = localStorage.getItem("app_favorite_events");
     return saved ? JSON.parse(saved) : [];
   });
 
-  // Save users to local storage whenever they change
+  /**
+   * Effect hook to persist the `internalUsers` list (which may contain passwords) to localStorage
+   * whenever it changes.
+   */
   useEffect(() => {
-    localStorage.setItem("users", JSON.stringify(users));
-  }, [users]);
+    localStorage.setItem("app_internal_users", JSON.stringify(internalUsers));
+  }, [internalUsers]);
 
-  // Save favorite events to local storage
+  /**
+   * Effect hook to persist `currentUserData` (always without password) to localStorage
+   * whenever it changes. Also updates `isAuthenticated` state.
+   */
   useEffect(() => {
-    localStorage.setItem("favoriteEvents", JSON.stringify(favorites));
+    if (currentUserData) {
+      localStorage.setItem("app_current_user", JSON.stringify(stripPassword(currentUserData)));
+      setIsAuthenticated(true);
+    } else {
+      localStorage.removeItem("app_current_user");
+      setIsAuthenticated(false);
+    }
+  }, [currentUserData]);
+  
+  /**
+   * Effect hook to persist the `favorites` list to localStorage whenever it changes.
+   */
+  useEffect(() => {
+    localStorage.setItem("app_favorite_events", JSON.stringify(favorites));
   }, [favorites]);
 
-  // Login function - supports demo credentials and robust authentication
-  const login = (email: string, password: string): boolean => {
-    // Always check the users array for the correct email and password
-    const foundUser = users.find(u => u.email === email && u.password === password);
-    if (foundUser) {
-      // Remove password before storing in state/localStorage
-      const { password: _, ...userWithoutPassword } = foundUser;
-      setUser(userWithoutPassword);
-      setIsAuthenticated(true);
-      localStorage.setItem("currentUser", JSON.stringify(userWithoutPassword));
+  /**
+   * Logs in a user by verifying their email and password against the `internalUsers` list.
+   * Sets the `currentUserData` and `isAuthenticated` state upon successful login.
+   * @param {string} email - The email of the user attempting to log in.
+   * @param {string} passwordInput - The password provided by the user.
+   * @returns {boolean} True if login is successful, false otherwise.
+   */
+  const login = (email: string, passwordInput: string): boolean => {
+    const foundUserInInternalList = internalUsers.find(u => u.email === email && u.password === passwordInput);
+    if (foundUserInInternalList) {
+      setCurrentUserData(foundUserInInternalList); 
+      // setIsAuthenticated(true); // Handled by useEffect on currentUserData
       return true;
     }
     return false;
   };
 
-  // Register function
-  const register = (name: string, email: string, password: string, country?: string): boolean => {
-    // Check if user already exists
-    if (users.some(u => u.email === email)) {
-      return false;
+  /**
+   * Registers a new user in the system.
+   * Adds the new user to `internalUsers` and automatically logs them in by setting `currentUserData`.
+   * @param {string} name - The full name of the new user.
+   * @param {string} email - The email address for the new user (must be unique).
+   * @param {string} passwordInput - The password for the new user.
+   * @param {string} [country] - The country of the new user (optional).
+   * @returns {boolean} True if registration is successful, false if the email already exists.
+   */
+  const register = (name: string, email: string, passwordInput: string, country?: string): boolean => {
+    if (internalUsers.some(u => u.email === email)) {
+      return false; // User already exists
     }
     
-    // Create new user
     const newUser: User = {
-      id: (users.length + 1).toString(),
+      id: (internalUsers.length > 0 ? Math.max(...internalUsers.map(u => parseInt(u.id))) + 1 : 1).toString(),
       name,
       email,
-      password,
-      createdAt: new Date().toISOString(),
+      password: passwordInput, 
+      createdAt: new Date().toISOString().split('T')[0], // Format as YYYY-MM-DD
       hasCompletedPersonalityTest: false,
       status: "active",
       personalityTags: [],
       country: country || "",
-      tier: "free"
+      tier: "free",
+      isAdmin: false,
+      isCorporate: false
     };
     
-    // Add to users list
-    const updatedUsers = [...users, newUser];
-    setUsers(updatedUsers);
-    
-    // Auto login after registration
-    const { password: _, ...userWithoutPassword } = newUser;
-    setUser(userWithoutPassword);
-    setIsAuthenticated(true);
-    localStorage.setItem("currentUser", JSON.stringify(userWithoutPassword));
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-    
+    setInternalUsers(prevUsers => [...prevUsers, newUser]);
+    setCurrentUserData(newUser); // Auto login
+    // setIsAuthenticated(true); // Handled by useEffect on currentUserData
     return true;
   };
 
-  // Social login function
+  /**
+   * Simulates a social login process.
+   * If a user with the mock social email exists, logs them in. Otherwise, creates a new mock user.
+   * @param {string} provider - The name of the social media provider (e.g., "google", "facebook").
+   * @returns {Promise<boolean>} A promise resolving to true on successful login/creation, false on error.
+   */
   const socialLogin = async (provider: string): Promise<boolean> => {
-    // This is a mock implementation for demo purposes
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Create a mock user based on the provider
-      const mockUser: User = {
-        id: (users.length + 1).toString(),
-        name: `${provider.charAt(0).toUpperCase() + provider.slice(1)} User`,
-        email: `${provider}user@example.com`,
-        hasCompletedPersonalityTest: false,
-        status: "active",
-        createdAt: new Date().toISOString(),
-        tier: "free"
-      };
-      
-      // Check if user already exists
-      const existingUser = users.find(u => u.email === mockUser.email);
-      
-      if (existingUser) {
-        // Log in existing user
-        setUser(existingUser);
-        setIsAuthenticated(true);
-        localStorage.setItem("currentUser", JSON.stringify(existingUser));
-        return true;
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
+      const mockEmail = `${provider.toLowerCase()}user@example.com`;
+      let userToLogin = internalUsers.find(u => u.email === mockEmail);
+
+      if (!userToLogin) {
+        userToLogin = {
+          id: (internalUsers.length > 0 ? Math.max(...internalUsers.map(u => parseInt(u.id))) + 1 : 1).toString(),
+          name: `${provider.charAt(0).toUpperCase() + provider.slice(1)} User`,
+          email: mockEmail,
+          // No password for social logins in this mock setup
+          hasCompletedPersonalityTest: false,
+          status: "active",
+          createdAt: new Date().toISOString().split('T')[0],
+          tier: "free",
+          isAdmin: false,
+          isCorporate: false
+        };
+        setInternalUsers(prevUsers => [...prevUsers, userToLogin!]);
       }
-      
-      // Add new user
-      const updatedUsers = [...users, mockUser];
-      setUsers(updatedUsers);
-      setUser(mockUser);
-      setIsAuthenticated(true);
-      localStorage.setItem("currentUser", JSON.stringify(mockUser));
-      localStorage.setItem("users", JSON.stringify(updatedUsers));
-      
+      setCurrentUserData(userToLogin);
+      // setIsAuthenticated(true); // Handled by useEffect
       return true;
     } catch (error) {
       console.error(`${provider} login error:`, error);
@@ -215,51 +405,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
   
-  // Phone login function
+  /**
+   * Simulates a phone number based login process.
+   * Validates a mock OTP. If a user with the mock phone-based email exists, logs them in.
+   * Otherwise, creates a new mock user.
+   * @param {string} phoneNumber - The user's phone number.
+   * @param {string} code - The 6-digit verification code.
+   * @returns {Promise<boolean>} A promise resolving to true on successful login/creation, false otherwise.
+   */
   const phoneLogin = async (phoneNumber: string, code: string): Promise<boolean> => {
-    // This is a mock implementation for demo purposes
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
+      if (code.length !== 6) return false; // Mock OTP validation
       
-      // For demo purposes, accept any code of length 6
-      if (code.length !== 6) {
-        return false;
-      }
-      
-      // Create or use existing phone user
       const emailFromPhone = `phone_${phoneNumber.replace(/\D/g, '')}@example.com`;
-      
-      // Check if user already exists
-      const existingUser = users.find(u => u.email === emailFromPhone);
-      
-      if (existingUser) {
-        // Log in existing user
-        setUser(existingUser);
-        setIsAuthenticated(true);
-        localStorage.setItem("currentUser", JSON.stringify(existingUser));
-        return true;
+      let userToLogin = internalUsers.find(u => u.email === emailFromPhone);
+
+      if (!userToLogin) {
+        userToLogin = {
+          id: (internalUsers.length > 0 ? Math.max(...internalUsers.map(u => parseInt(u.id))) + 1 : 1).toString(),
+          name: `Phone User (${phoneNumber})`,
+          email: emailFromPhone,
+          // No password for phone logins in this mock setup
+          hasCompletedPersonalityTest: false,
+          status: "active",
+          createdAt: new Date().toISOString().split('T')[0],
+          tier: "free",
+          isAdmin: false,
+          isCorporate: false
+        };
+        setInternalUsers(prevUsers => [...prevUsers, userToLogin!]);
       }
-      
-      // Create new phone user
-      const newUser: User = {
-        id: (users.length + 1).toString(),
-        name: `Phone User (${phoneNumber})`,
-        email: emailFromPhone,
-        hasCompletedPersonalityTest: false,
-        status: "active",
-        createdAt: new Date().toISOString(),
-        tier: "free"
-      };
-      
-      // Add new user
-      const updatedUsers = [...users, newUser];
-      setUsers(updatedUsers);
-      setUser(newUser);
-      setIsAuthenticated(true);
-      localStorage.setItem("currentUser", JSON.stringify(newUser));
-      localStorage.setItem("users", JSON.stringify(updatedUsers));
-      
+      setCurrentUserData(userToLogin);
+      // setIsAuthenticated(true); // Handled by useEffect
       return true;
     } catch (error) {
       console.error(`Phone login error:`, error);
@@ -267,30 +445,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
   
-  // Upgrade tier function
+  /**
+   * Upgrades the subscription tier of the currently authenticated user.
+   * Updates both `currentUserData` and the user's record in `internalUsers`.
+   * @param {"premium" | "enterprise"} tier - The target subscription tier.
+   * @returns {Promise<boolean>} A promise resolving to true on success, false if no user is logged in or on error.
+   */
   const upgradeTier = async (tier: "premium" | "enterprise"): Promise<boolean> => {
-    // This is a mock implementation for demo purposes
+    if (!currentUserData) return false;
     try {
-      if (!user) return false;
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Create the fully updated user object first
+      const fullyUpdatedUser = { ...currentUserData, tier };
+
+      // Update the current user state
+      setCurrentUserData(fullyUpdatedUser);
       
-      // Update user tier
-      const updatedUser = { ...user, tier };
-      setUser(updatedUser);
-      
-      // Update in users array
-      const updatedUsers = users.map(u => 
-        u.id === user.id ? { ...u, tier } : u
+      // Update the user in the internalUsers list
+      setInternalUsers(prevInternalUsers => 
+        prevInternalUsers.map(u => 
+          u.id === currentUserData.id ? fullyUpdatedUser : u
+        )
       );
-      
-      setUsers(updatedUsers);
-      
-      // Update localStorage
-      localStorage.setItem("currentUser", JSON.stringify(updatedUser));
-      localStorage.setItem("users", JSON.stringify(updatedUsers));
-      
       return true;
     } catch (error) {
       console.error(`Upgrade tier error:`, error);
@@ -298,96 +475,83 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Logout function
+  /**
+   * Logs out the current user by clearing `currentUserData` and setting `isAuthenticated` to false.
+   * The `useEffect` hook for `currentUserData` handles removal from localStorage.
+   */
   const logout = () => {
-    setIsAuthenticated(false);
-    setUser(null);
-    localStorage.removeItem("currentUser");
+    // setIsAuthenticated(false); // Handled by useEffect on currentUserData
+    setCurrentUserData(null);
   };
 
-  // Complete personality test
+  /**
+   * Updates the current user's profile to indicate completion of the personality test
+   * and stores the associated tags.
+   * @param {string[]} personalityTags - An array of personality tags.
+   */
   const completePersonalityTest = (personalityTags: string[]) => {
-    if (!user) return;
-    
-    const updatedUser = { 
-      ...user, 
-      hasCompletedPersonalityTest: true, 
-      personalityTags 
-    };
-    
-    setUser(updatedUser);
-    
-    // Also update in the users array
-    const updatedUsers = users.map(u => 
-      u.id === user.id ? { ...u, hasCompletedPersonalityTest: true, personalityTags } : u
-    );
-    
-    setUsers(updatedUsers);
-    
-    // Update localStorage
-    localStorage.setItem("currentUser", JSON.stringify(updatedUser));
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
+    if (!currentUserData) return;
+    const updatedData = { hasCompletedPersonalityTest: true, personalityTags };
+    const updatedUser = { ...currentUserData, ...updatedData };
+    setCurrentUserData(updatedUser);
+    setInternalUsers(prevUsers => prevUsers.map(u => u.id === currentUserData.id ? { ...u, ...updatedData } : u));
   };
 
-  // Get all users for admin
-  const getAllUsers = (): User[] => {
-    return users;
+  /**
+   * Retrieves all registered users, with their passwords stripped.
+   * This function is typically used for admin dashboards or user management sections.
+   * @returns {Omit<User, 'password'>[]} An array of user objects, safe for display.
+   */
+  const getAllUsers = (): Omit<User, 'password'>[] => {
+    return stripPasswordsFromUsers(internalUsers);
   };
 
-  // Update user profile
-  const updateUserProfile = (updates: Partial<User>) => {
-    if (!user) return;
+  /**
+   * Updates the profile of the currently authenticated user with the provided data.
+   * Ensures that the password cannot be updated through this method.
+   * @param {Partial<Omit<User, 'password'>>} updates - An object containing the user fields to update.
+   */
+  const updateUserProfile = (updates: Partial<Omit<User, 'password'>>) => {
+    if (!currentUserData) return;
+    // Explicitly exclude password from updates, even if Omit<User, 'password'> is used for type safety.
+    const { password, ...safeUpdates } = updates as any; // Cast to any to allow destructuring password if it was mistakenly passed
     
-    const updatedUser = { ...user, ...updates };
-    setUser(updatedUser);
-    
-    // Update in users array
-    const updatedUsers = users.map(u => 
-      u.id === user.id ? { ...u, ...updates } : u
-    );
-    
-    setUsers(updatedUsers);
-    
-    // Update localStorage
-    localStorage.setItem("currentUser", JSON.stringify(updatedUser));
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
+    const updatedUser = { ...currentUserData, ...safeUpdates };
+    setCurrentUserData(updatedUser);
+    setInternalUsers(prevUsers => prevUsers.map(u => u.id === currentUserData.id ? { ...u, ...safeUpdates } : u));
   };
 
-  // Close account
+  /**
+   * Closes the account of the currently authenticated user.
+   * This removes the user from the `internalUsers` list and logs them out.
+   */
   const closeAccount = () => {
-    if (!user) return;
-    
-    // Remove user from users list
-    const updatedUsers = users.filter(u => u.id !== user.id);
-    setUsers(updatedUsers);
-    
-    // Update localStorage
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-    
-    // Logout
-    logout();
+    if (!currentUserData) return;
+    setInternalUsers(prevUsers => prevUsers.filter(u => u.id !== currentUserData.id));
+    logout(); 
   };
 
-  // Toggle event as favorite
+  /**
+   * Toggles the favorite status of a given event ID for the current user.
+   * Updates the `favorites` state, which is persisted to localStorage.
+   * @param {string} eventId - The ID of the event to toggle.
+   */
   const toggleEventFavorite = (eventId: string) => {
-    if (favorites.includes(eventId)) {
-      setFavorites(favorites.filter(id => id !== eventId));
-    } else {
-      setFavorites([...favorites, eventId]);
-    }
+    setFavorites(prev => prev.includes(eventId) ? prev.filter(id => id !== eventId) : [...prev, eventId]);
   };
 
-  // Get favorite events
-  const getFavoriteEvents = () => {
-    return favorites;
-  };
+  /**
+   * Retrieves the list of favorite event IDs for the current user.
+   * @returns {string[]} An array of event IDs.
+   */
+  const getFavoriteEvents = () => favorites;
 
   return (
     <AuthContext.Provider value={{
       isAuthenticated,
-      user,
-      isAdmin: user?.isAdmin || false,
-      hasCompletedPersonalityTest: user?.hasCompletedPersonalityTest || false,
+      user: currentUserData ? stripPassword(currentUserData) : null, // Always expose password-stripped user
+      isAdmin: currentUserData?.isAdmin || false,
+      hasCompletedPersonalityTest: currentUserData?.hasCompletedPersonalityTest || false,
       login,
       register,
       logout,
@@ -406,5 +570,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Custom hook for using auth context
+/**
+ * @function useAuth
+ * @description Custom React hook to easily access the authentication context.
+ * @returns {AuthContextType} The authentication context object.
+ * @example
+ * const { user, login, isAuthenticated } = useAuth();
+ */
 export const useAuth = () => useContext(AuthContext);
